@@ -1,0 +1,131 @@
+/* src/components/stylesForComponents/Navbar.css */
+
+.navbar {
+  background-color: hsl(231, 100%, 50%);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.navbar-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 16px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  height: 80px;
+}
+navbar-logo {
+  display: flex;
+  align-items: center;
+  gap: 15px; /* Элементтер аралык аралык */
+}
+
+.navbar-logo img {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%; /* Айлананы форма кылуу */
+  border: 3px solid #ffffff; /* Ак контур */
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3); /* Көлөкө */
+  transition: transform 0.3s;
+  margin-right: 10px;
+}
+
+.navbar-logo img:hover {
+  transform: scale(1.1); /* Логотип hover болгондо чоңойот */
+}
+.navbar-logo h3 h4 {
+  margin: 0;
+  font-size: 30px;
+}
+.navbar-logo h3 {
+  font-size: 16px;
+  font-size: 24px;
+  margin: 0;
+  color: #ffffff; /* Ак текст */
+  font-weight: 700;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5); /* Жеңил текст көлөкөсү */
+}
+.navbar-logo h4 {
+  font-size: 24px;
+  margin: 0;
+  color: #ffffff; /* Ак текст */
+  font-weight: 700;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5); /* Жеңил текст көлөкөсү */
+}
+
+.navbar-logo-image {
+  height: 50px;
+  width: 50px;
+  border-radius: 50%;
+  margin-right: 10px;
+}
+.navbar-left {
+  display: flex;
+  align-items: center;
+}
+
+.navbar-logo {
+  font-size: 20px;
+  font-weight: bold;
+  color: #ffffff; /* Primary color (blue) */
+  text-decoration: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.navbar-links {
+  display: flex;
+  gap: 20px;
+  align-items: center;
+}
+
+.text_conteiner {
+  display: flex;
+  flex-direction: column;
+}
+
+.menus {
+  font-size: 18px;
+  border-radius: 30px;
+  padding: 8px 12px;
+  color: #ffffff; /* text-gray-700 */
+  font-weight: 500;
+  
+  text-decoration: none;
+  transition: color 0.6s ease;
+}
+
+.menus:hover {
+  background-color: #ffffff;
+  color: #000000;
+}
+
+.navbar-right {
+  display: flex;
+  align-items: center;
+}
+
+.logout-btn {
+  font-size: 18px;
+  padding: 8px 12px;
+  border-radius: 30px;
+  background: none;
+  border: none;
+  font-weight: 500;
+  color: #ffffff;
+  cursor: pointer;
+  transition: color 0.3s ease;
+}
+
+.logout-btn:hover {
+  padding: 8px 12px;
+  background-color: #ffffff;
+  color: #000000;
+  transition: all 0.6s ease;
+
+}
+
