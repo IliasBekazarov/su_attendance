@@ -1,57 +1,43 @@
-import React, { useEffect, useState } from 'react';
-import axios from 'axios';
-import './pagesCss/Schedule.css';
+import { useState, useEffect } from 'react';
+import { toast } from 'react-toastify';
+import api from '../services/api';
+import Table from '../components/Table';
+import Spinner from '../components/Spinner';
 
 const Schedule = () => {
   const [schedules, setSchedules] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
 
   useEffect(() => {
     const fetchSchedules = async () => {
       try {
-        const token = localStorage.getItem('token'); // Эгерде аутентификация болсо
-        const response = await axios.get('http://localhost:8000/api/schedule/', {
-          headers: { Authorization: `Bearer ${token}` }
-        });
-        setSchedules(response.data || []);
-        setLoading(false);
-      } catch (err) {
-        setError('Failed to load schedules');
+        const response = await api.get('/schedule/');
+        setSchedules(response.data);
+      } catch (error) {
+        toast.error('Failed to load schedules');
+      } finally {
         setLoading(false);
       }
     };
     fetchSchedules();
   }, []);
 
-  if (loading) return <div className="schedule-container">Loading...</div>;
-  if (error) return <div className="schedule-container error">{error}</div>;
+  const columns = [
+    { header: 'ID', accessor: 'id' },
+    { header: 'Group', accessor: 'group_id' },
+    { header: 'Date', accessor: 'date' },
+    { header: 'Time', accessor: 'time' },
+    { header: 'Subject', accessor: 'subject' },
+  ];
+
+  if (loading) {
+    return <Spinner />;
+  }
 
   return (
-    <div className="schedule-container">
-      <h2>Schedule</h2>
-      <table className="schedule-table">
-        <thead>
-          <tr>
-            <th>Course</th>
-            <th>Group</th>
-            <th>Period</th>
-            <th>Time</th>
-            <th>Subject</th>
-          </tr>
-        </thead>
-        <tbody>
-          {schedules.map((schedule) => (
-            <tr key={schedule.id}>
-              <td>{schedule.course_name}</td>
-              <td>{schedule.group_name}</td>
-              <td>{schedule.period}</td>
-              <td>{schedule.time}</td>
-              <td>{schedule.subject}</td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+    <div className="container mx-auto">
+      <h1 className="text-2xl font-bold mb-6">Расписание</h1>
+      <Table columns={columns} data={schedules} />
     </div>
   );
 };

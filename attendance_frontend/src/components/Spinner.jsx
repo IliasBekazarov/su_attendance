@@ -1,6 +1,8 @@
-// src/components/Spinner.jsx
-const Spinner = () => {
-  return <div className="w-6 h-6 border-4 border-primary border-t-transparent rounded-full animate-spin" />;
-};
+// src/components/Spinner.js
+const Spinner = () => (
+  <div className="flex justify-center items-center">
+    <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-blue-500"></div>
+  </div>
+);
 
 export default Spinner;

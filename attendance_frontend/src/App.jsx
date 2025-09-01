@@ -1,5 +1,6 @@
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
-import { ToastContainer } from "react-toastify";
+import { ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 import Navbar from "./components/Navbar";
 import Sidebar from "./components/Sidebar";
 import Login from "./pages/Login";
@@ -11,7 +12,7 @@ import Reports from "./pages/Reports";
 import "react-toastify/dist/ReactToastify.css";
 import { AuthProvider, AuthContext } from "./context/AuthContext";
 import { useContext } from "react";
-
+import "./App.css";
 const AppContent = () => {
   const { user } = useContext(AuthContext);
 
@@ -27,10 +28,10 @@ const AppContent = () => {
 
   return (
     <div className="flex">
-      <Sidebar />
-      <div className="flex-1 ml-0 md:ml-64">
+      
+      <div className="navbar">
         <Navbar />
-        <div className="p-6">
+        <div className="content">
           <Routes>
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/schedule" element={<Schedule />} />

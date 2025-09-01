@@ -30,8 +30,10 @@ const Login = () => {
     }
     setLoading(true);
     try {
-      await login(credentials);
-      setError(null);
+      const success = await login(credentials.username, credentials.password);
+      if (success) {
+        navigate("/dashboard");
+      }
     } catch (err) {
       setError(err.message);
     } finally {

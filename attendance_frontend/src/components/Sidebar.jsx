@@ -1,37 +1,42 @@
-// src/components/Sidebar.jsx
-import { useState } from "react";
-import { Link } from "react-router-dom";
-import { useContext } from "react";
-import { AuthContext } from "../context/AuthContext";
+import { useContext } from 'react';
+import { Link } from 'react-router-dom';
+import { AuthContext } from '../context/AuthContext';
 
 const Sidebar = () => {
   const { user } = useContext(AuthContext);
-  const [isOpen, setIsOpen] = useState(false);
 
-  const roleLinks = {
-    admin: [{ to: "/dashboard", label: "Dashboard" }, { to: "/schedule", label: "Schedule" }, { to: "/attendance", label: "Attendance" }, { to: "/reports", label: "Reports" }],
-    teacher: [{ to: "/attendance", label: "Attendance" }, { to: "/schedule", label: "Schedule" }],
-    student: [{ to: "/schedule", label: "Schedule" }, { to: "/attendance", label: "My Attendance" }],
-    parent: [{ to: "/reports", label: "Reports" }],
-    manager: [{ to: "/schedule", label: "Schedule" }, { to: "/attendance", label: "Attendance" }],
+  const menuItems = {
+    admin: [
+      { path: '/dashboard', label: 'Дашборд' },
+      { path: '/users', label: 'Колдонуучулар' },
+      { path: '/groups', label: 'Группалар' },
+      { path: '/reports', label: 'Отчеттор' },
+    ],
+    teacher: [
+      { path: '/dashboard', label: 'Дашборд' },
+      { path: '/schedule', label: 'Расписание' },
+      { path: '/attendance', label: 'Катышуу' },
+    ],
+    student: [
+      { path: '/dashboard', label: 'Дашборд' },
+      { path: '/schedule', label: 'Расписание' },
+      { path: '/student-profile', label: 'Профиль' },
+    ],
   };
 
   return (
-    <div className="bg-white shadow-soft h-screen w-64 fixed md:static md:translate-x-0 transition-transform duration-300 ease-in-out">
-      <div className="p-6">
-        
-        <nav className={`${isOpen ? "block" : "hidden"} md:block`}>
-          {user && roleLinks[user.role]?.map((link) => (
-            <Link
-              key={link.to}
-              to={link.to}
-              className="block py-2 px-4 text-gray-700 hover:bg-primary hover:text-white rounded transition-colors"
-            >
-              {link.label}
-            </Link>
+    <div className="fixed top-0 left-0 h-full w-64 bg-gray-800 text-white p-4">
+      <h2 className="text-xl font-bold mb-6">Меню</h2>
+      <ul>
+        {user &&
+          menuItems[user.role]?.map((item) => (
+            <li key={item.path} className="mb-2">
+              <Link to={item.path} className="hover:bg-gray-700 p-2 rounded block">
+                {item.label}
+              </Link>
+            </li>
           ))}
-        </nav>
-      </div>
+      </ul>
     </div>
   );
 };

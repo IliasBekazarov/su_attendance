@@ -30,15 +30,18 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'rest_framework',
     'rest_framework_simplejwt',
-    'drf_spectacular',  # For Swagger/OpenAPI
-    'corsheaders',  # For React frontend
+    'drf_spectacular',
+    'corsheaders',
     'accounts',
     'attendance',
     'reports',
     'notifications',
     'schedule',
-    'stats.apps.StatsConfig',
+    'stats.apps.StatsConfig'
 ]
+
+
+
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
@@ -135,9 +138,13 @@ AUTH_USER_MODEL = 'accounts.CustomUser'
 
 # REST Framework Settings
 REST_FRAMEWORK = {
-    'DEFAULT_AUTHENTICATION_CLASSES': (
+    'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
+    'DEFAULT_AUTHENTICATION_CLASSES': [
         'rest_framework_simplejwt.authentication.JWTAuthentication',
-    ),
+    ],
+    'DEFAULT_PERMISSION_CLASSES': [
+        'rest_framework.permissions.IsAuthenticated',
+    ],
 }
 
 # Simple JWT Settings

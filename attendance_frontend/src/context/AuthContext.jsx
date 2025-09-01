@@ -1,5 +1,4 @@
-import React, { createContext, useState, useEffect } from "react";
-import { jwtDecode } from "jwt-decode";
+import { createContext, useState, useEffect } from "react";
 import api from "../services/api";
 import { toast } from "react-toastify";
 
@@ -12,44 +11,53 @@ export const AuthProvider = ({ children }) => {
   useEffect(() => {
     const token = localStorage.getItem("token");
     if (token) {
-      try {
-        const decoded = jwtDecode(token);
-        if (decoded.role) {
-          setUser({ ...decoded, token });
-        } else {
-          toast.error("Invalid session. Please login again.");
+      api
+        .get("/profile/")
+        .then((response) => {
+          setUser(response.data);
+          setLoading(false);
+        })
+        .catch(() => {
           localStorage.removeItem("token");
-        }
-      } catch (error) {
-        toast.error("Invalid token. Please login again.");
-        localStorage.removeItem("token");
-      }
+          setLoading(false);
+        });
+    } else {
+      setLoading(false);
     }
-    setLoading(false);
   }, []);
 
-  const login = async (credentials) => {
+  const login = async (username, password) => {
     try {
-      const response = await api.post("/token/", credentials);
-      const { access } = response.data;
-      localStorage.setItem("token", access);
-      const decoded = jwtDecode(access);
-      if (decoded.role) {
-        setUser({ ...decoded, token: access });
-        toast.success("Login successful!");
-      } else {
-        throw new Error("Role not found in token");
+      if (!username || !password) {
+        throw new Error("Username and password are required");
       }
+      console.log("Sending:", { username, password }); // Debugging
+      const response = await api.post(
+        "/token/",
+        { username, password },
+        {
+          headers: { "Content-Type": "application/json" },
+        }
+      );
+      console.log("Response:", response.data); // Debugging
+      localStorage.setItem("token", response.data.access);
+      const profile = await api.get("/profile/");
+      setUser(profile.data);
+      toast.success("Successfully logged in");
+      return true;
     } catch (error) {
-      toast.error("Login failed: " + (error.response?.data?.detail || error.message));
-      throw error;
+      console.error("Login error:", error.response?.data || error.message); // Debugging
+      toast.error(
+        "Login failed: " + (error.response?.data?.detail || error.message)
+      );
+      return false;
     }
   };
 
   const logout = () => {
     localStorage.removeItem("token");
     setUser(null);
-    toast.info("Logged out successfully.");
+    toast.success("Logged out");
   };
 
   return (
