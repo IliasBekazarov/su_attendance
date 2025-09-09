@@ -1,0 +1,37 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="container mt-5">
+    <h2>Мугалимдердин расписаниеси</h2>
+    <hr>
+    {% if grouped_schedule %}
+        {% for day, subjects in grouped_schedule.items %}
+            {% if subjects %}
+                <div class="card mb-4">
+                    <div class="card-header bg-primary text-white">
+                        <h4 class="mb-0">{{ day }}</h4>
+                    </div>
+                    <ul class="list-group list-group-flush">
+                        {% for subject in subjects %}
+                            <li class="list-group-item">
+                                <h5 class="mb-1">{{ subject.subject_name }}</h5>
+                                <p class="mb-1">
+                                    <strong>Мугалим:</strong> {{ subject.teacher.name }}<br>
+                                    <strong>Убакыт:</strong> {{ subject.start_time|time:"H:i" }} - {{ subject.end_time|time:"H:i" }}<br>
+                                    <strong>Группалар:</strong>
+                                    {% for group in subject.groups.all %}
+                                        <span class="badge bg-secondary">{{ group.name }}</span>
+                                    {% endfor %}
+                                </p>
+                            </li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            {% endif %}
+        {% endfor %}
+    {% else %}
+        <div class="alert alert-info">
+            Сизге дайындалган сабактар жок.
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

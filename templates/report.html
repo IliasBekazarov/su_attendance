@@ -1,0 +1,23 @@
+{% extends 'base.html' %}
+{% load django_bootstrap5 %}
+{% block content %}
+<div class="container">
+    <h2>Отчет</h2>
+    <form method="post">
+        {% csrf_token %}
+        <select name="format" class="form-select mb-3">
+            <option value="pdf">PDF</option>
+            <option value="excel">Excel</option>
+        </select>
+        <button type="submit" class="btn btn-primary">Экспорт</button>
+    </form>
+    <table class="table table-striped mt-3">
+        <thead><tr><th>Студент</th><th>Сабак</th><th>Статус</th><th>Дата</th></tr></thead>
+        <tbody>
+            {% for att in attendances %}
+            <tr><td>{{ att.student.name }}</td><td>{{ att.subject.subject_name }}</td><td>{{ att.status }}</td><td>{{ att.date }}</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

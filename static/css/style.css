@@ -1,0 +1,10 @@
+/* static/css/style.css */
+body {
+    font-family: 'Roboto', sans-serif;
+}
+.navbar-brand {
+    font-weight: bold;
+}
+.alert {
+    margin-top: 20px;
+}

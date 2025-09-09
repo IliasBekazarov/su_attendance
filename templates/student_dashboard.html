@@ -1,0 +1,40 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container mt-5">
+    <h2>Салам, {{ request.user.student.name }}!</h2>
+    <h3 class="mt-4">Менин сабактарым жана катышуу статусум</h3>
+    {% if subjects %}
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>Сабактын аты</th>
+                <th>Мугалим</th>
+                <th>Катышуу статусу</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for subject in subjects %}
+            <tr>
+                <td>{{ subject.subject_name }}</td>
+                <td>{{ subject.teacher.name }}</td>
+                <td>
+                    {% if subject.attendance_status == 'P' %}
+                        <span class="badge bg-success">Катышты</span>
+                    {% elif subject.attendance_status == 'A' %}
+                        <span class="badge bg-danger">Жок</span>
+                    {% else %}
+                        <span class="badge bg-secondary">Белгиленген эмес</span>
+                    {% endif %}
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <div class="alert alert-info" role="alert">
+        Сизде азырынча сабактар жок. Менежерге кайрылыңыз.
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

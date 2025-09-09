@@ -1,0 +1,68 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="container mt-5">
+    <h1>Башкаруу Панели</h1>
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert alert-{{ message.tags }}">{{ message }}</div>
+        {% endfor %}
+    {% endif %}
+    
+    {% if role == 'ADMIN' or role == 'MANAGER' %}
+        <div class="row">
+            <div class="col-md-4">
+                <div class="card">
+                    <div class="card-body">
+                        <h5>Студенттер</h5>
+                        <p>{{ total_students }}</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card">
+                    <div class="card-body">
+                        <h5>Мугалимдер</h5>
+                        <p>{{ total_teachers }}</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card">
+                    <div class="card-body">
+                        <h5>Топтор</h5>
+                        <p>{{ total_groups }}</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="mt-4">
+            <h3>Катышуу Статистикасы</h3>
+            <!-- Chart.js диаграммасы бул жерге кошулат -->
+        </div>
+    {% elif role == 'STUDENT' %}
+        <h3>Сиздин Катышууңуз</h3>
+        <p>Катышуу пайызы: {{ percentage }}%</p>
+        <div class="progress">
+            <div class="progress-bar bg-success" style="width: {{ percentage }}%"></div>
+        </div>
+        <table class="table mt-3">
+            <thead>
+                <tr>
+                    <th>Сабак</th>
+                    <th>Дата</th>
+                    <th>Статус</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for att in attendance %}
+                <tr>
+                    <td>{{ att.subject.subject_name }}</td>
+                    <td>{{ att.date }}</td>
+                    <td>{{ att.status }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% endif %}
+</div>
+{% endblock %}

@@ -1,0 +1,66 @@
+{% extends 'base.html' %}
+{% load django_bootstrap5 %}
+{% block content %}
+<div class="container">
+    <h2>Расписание - {{ role }}</h2>
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert alert-info">{{ message }}</div>
+        {% endfor %}
+    {% endif %}
+    {% if role in 'ADMIN,MANAGER' %}
+        <form method="post" class="mb-4">
+            {% csrf_token %}
+            <div class="mb-3">
+                <label for="subject_name" class="form-label">Сабак:</label>
+                <input type="text" name="subject_name" id="subject_name" class="form-control" required>
+            </div>
+            <div class="mb-3">
+                <label for="teacher_id" class="form-label">Мугалим:</label>
+                <select name="teacher_id" id="teacher_id" class="form-select">
+                    <option value="">Тандоо</option>
+                    {% for teacher in teachers %}
+                        <option value="{{ teacher.id }}">{{ teacher.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="mb-3">
+                <label for="course_id" class="form-label">Курс:</label>
+                <select name="course_id" id="course_id" class="form-select">
+                    <option value="">Тандоо</option>
+                    {% for course in courses %}
+                        <option value="{{ course.id }}">{{ course.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <button type="submit" class="btn btn-primary">Сабак кошуу</button>
+        </form>
+    {% endif %}
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>Сабак</th>
+                <th>Мугалим</th>
+                <th>Курс</th>
+                {% if role == 'TEACHER' %}
+                    <th>Аракет</th>
+                {% endif %}
+            </tr>
+        </thead>
+        <tbody>
+            {% for subject in subjects %}
+                <tr>
+                    <td>{{ subject.subject_name }}</td>
+                    <td>{{ subject.teacher.name|default:'Жок' }}</td>
+                    <td>{{ subject.course.name|default:'Жок' }}</td>
+                    {% if role == 'TEACHER' %}
+                        <td><a href="{% url 'mark_attendance' subject.id %}" class="btn btn-sm btn-primary">Белгилөө</a></td>
+                    {% endif %}
+                </tr>
+            {% empty %}
+                <tr><td colspan="4">Сабактар жок</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}
