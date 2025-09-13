@@ -1,33 +1,32 @@
 {% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Менин расписанием{% endblock %}
+
 {% block content %}
-<div class="container mt-5">
-    <h2>Студенттин расписаниеси</h2>
-    <hr>
-    {% if grouped_schedule %}
-        {% for day, subjects in grouped_schedule.items %}
-            {% if subjects %}
-                <div class="card mb-4">
-                    <div class="card-header bg-success text-white">
-                        <h4 class="mb-0">{{ day }}</h4>
-                    </div>
-                    <ul class="list-group list-group-flush">
-                        {% for subject in subjects %}
-                            <li class="list-group-item">
-                                <h5 class="mb-1">{{ subject.subject_name }}</h5>
-                                <p class="mb-1">
-                                    <strong>Мугалим:</strong> {{ subject.teacher.name }}<br>
-                                    <strong>Убакыт:</strong> {{ subject.start_time|time:"H:i" }} - {{ subject.end_time|time:"H:i" }}
-                                </p>
-                            </li>
-                        {% endfor %}
-                    </ul>
-                </div>
-            {% endif %}
-        {% endfor %}
-    {% else %}
-        <div class="alert alert-info">
-            Сизге дайындалган сабактар жок.
-        </div>
-    {% endif %}
+<div class="timetable-container">
+    <h2 class="timetable-title">Менин расписанием ({{ student.group.name }})</h2>
+    <table class="editabletable" style="contenteditable: false;">
+        <thead>
+            <tr>
+                <th>Пара</th>
+                <th>Убакыт</th>
+                <th>Сабак</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for schedule in schedules %}
+            <tr>
+                <td>{{ forloop.counter }}</td>
+                <td>{{ schedule.start_time|time:"H:i" }} - {{ schedule.end_time|time:"H:i" }}</td>
+                <td>
+                    {{ schedule.subject.subject_name }}<br>
+                    {{ schedule.subject.teacher.name }}<br>
+                    {{ schedule.room|default:"Кабинет жок" }}
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
 </div>
 {% endblock %}

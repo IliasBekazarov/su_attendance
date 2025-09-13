@@ -1,12 +1,15 @@
 {% extends 'base.html' %}
 {% load django_bootstrap5 %}
+{% block title %}Катталуу{% endblock %}
 {% block content %}
-<div class="container">
-    <h2>Регистрация</h2>
-    <form method="post">
-        {% csrf_token %}
-        {% bootstrap_form form %}
-        <button type="submit" class="btn btn-primary">Түзүү</button>
-    </form>
+<div class="container d-flex justify-content-center align-items-center min-vh-100">
+    <div class="card p-4 shadow-sm" style="max-width: 500px; width: 100%;">
+        <h2 class="text-center mb-4">Катталуу</h2>
+        <form method="POST">
+            {% csrf_token %}
+            {% bootstrap_form form %}
+            {% bootstrap_button "Катталуу" button_type="submit" button_class="btn-primary w-100" %}
+        </form>
+    </div>
 </div>
 {% endblock %}

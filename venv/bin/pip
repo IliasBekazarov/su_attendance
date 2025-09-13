@@ -1,4 +1,4 @@
-#!/Users/k_beknazarovicloud.com/Desktop/attendance_system/venv/bin/python3
+#!/Users/k_beknazarovicloud.com/Desktop/attendance_system/venv/bin/python
 # -*- coding: utf-8 -*-
 import re
 import sys

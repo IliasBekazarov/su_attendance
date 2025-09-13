@@ -1,0 +1,45 @@
+{% extends 'base.html' %}
+{% load django_bootstrap5 %}
+{% block title %}Катышууну белгилөө{% endblock %}
+{% block content %}
+<div class="container mt-5">
+    <h2 class="mb-4">{{ schedule.subject.subject_name }} - {{ schedule.group.name }} ({{ schedule.day }})</h2>
+    <form method="POST">
+        {% csrf_token %}
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead class="table-primary">
+                    <tr>
+                        <th>Студент</th>
+                        <th>Статус</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for student in students %}
+                    <tr>
+                        <td>{{ student.name }}</td>
+                        <td>
+                            <div class="d-flex gap-3">
+                                <div class="form-check">
+                                    <input type="radio" name="status_{{ student.id }}" value="Present" class="form-check-input" id="present_{{ student.id }}">
+                                    <label class="form-check-label" for="present_{{ student.id }}">Катышты</label>
+                                </div>
+                                <div class="form-check">
+                                    <input type="radio" name="status_{{ student.id }}" value="Absent" class="form-check-input" id="absent_{{ student.id }}">
+                                    <label class="form-check-label" for="absent_{{ student.id }}">Катышкан жок</label>
+                                </div>
+                                <div class="form-check">
+                                    <input type="radio" name="status_{{ student.id }}" value="Late" class="form-check-input" id="late_{{ student.id }}">
+                                    <label class="form-check-label" for="late_{{ student.id }}">Кечикти</label>
+                                </div>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% bootstrap_button "Белгилөө" button_type="submit" button_class="btn-primary" %}
+    </form>
+</div>
+{% endblock %}

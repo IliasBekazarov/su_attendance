@@ -1,43 +1,45 @@
 {% extends 'base.html' %}
+{% load django_bootstrap5 %}
+{% block title %}Катышууну белгилөө{% endblock %}
 {% block content %}
 <div class="container mt-5">
-    <h2>{{ subject.subject_name }} сабагына катышууну белгилөө</h2>
-    <form method="post">
+    <h2 class="mb-4">{{ subject.subject_name }} - Катышууну белгилөө</h2>
+    <form method="POST">
         {% csrf_token %}
-        <div class="form-group mb-3">
-            <label for="attendance_date">Датаны тандаңыз:</label>
-            <input type="date" class="form-control" id="attendance_date" name="attendance_date" required>
-        </div>
-        <table class="table table-striped">
-            <thead>
-                <tr>
-                    <th>Студенттин аты</th>
-                    <th>Статус</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for student in students %}
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead class="table-primary">
+                    <tr>
+                        <th>Студент</th>
+                        <th>Статус</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for student in students %}
                     <tr>
                         <td>{{ student.name }}</td>
                         <td>
-                            <div class="form-check form-check-inline">
-                                <input class="form-check-input" type="radio" name="status_{{ student.id }}" id="present_{{ student.id }}" value="P" checked>
-                                <label class="form-check-label" for="present_{{ student.id }}">Катышты</label>
-                            </div>
-                            <div class="form-check form-check-inline">
-                                <input class="form-check-input" type="radio" name="status_{{ student.id }}" id="absent_{{ student.id }}" value="A">
-                                <label class="form-check-label" for="absent_{{ student.id }}">Жок</label>
+                            <div class="d-flex gap-3">
+                                <div class="form-check">
+                                    <input type="radio" name="status_{{ student.id }}" value="Present" class="form-check-input" id="present_{{ student.id }}">
+                                    <label class="form-check-label" for="present_{{ student.id }}">Катышты</label>
+                                </div>
+                                <div class="form-check">
+                                    <input type="radio" name="status_{{ student.id }}" value="Absent" class="form-check-input" id="absent_{{ student.id }}">
+                                    <label class="form-check-label" for="absent_{{ student.id }}">Катышкан жок</label>
+                                </div>
+                                <div class="form-check">
+                                    <input type="radio" name="status_{{ student.id }}" value="Late" class="form-check-input" id="late_{{ student.id }}">
+                                    <label class="form-check-label" for="late_{{ student.id }}">Кечикти</label>
+                                </div>
                             </div>
                         </td>
                     </tr>
-                {% empty %}
-                    <tr>
-                        <td colspan="2">Бул сабакка катталган студенттер жок.</td>
-                    </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-        <button type="submit" class="btn btn-success mt-3">Сактоо</button>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% bootstrap_button "Белгилөө" button_type="submit" button_class="btn-primary" %}
     </form>
 </div>
 {% endblock %}

@@ -16,10 +16,12 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'crispy_forms',
-    'django_bootstrap5',
+    'django_bootstrap5',  # Bootstrap 5 интеграциясы,  # Bootstrap 4 үшін Crispy Forms
+    'dal',  # django-autocomplete-light
+    'dal_select2',  # Select2 интеграциясы
     'core.apps.CoreConfig',
-    ]
+    'bootstrap4',
+]
 CRISPY_TEMPLATE_PACK = 'bootstrap4'
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',

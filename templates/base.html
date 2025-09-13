@@ -2,80 +2,118 @@
 <!DOCTYPE html>
 <html lang="ky">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}Катышуу Системасы{% endblock %}</title>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Salymbekov University</title>
     <!-- Bootstrap CSS -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+    <link rel="icon" type="image/png" href="{% static 'css/su_logo.png' %}" />
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+    <link rel="stylesheet" href="{% static 'css/style.css' %}" />
+    <!-- Font Awesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />
 </head>
 <body>
     <!-- Navbar -->
-    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary fixed-top" style="width: 100%;">
         <div class="container-fluid">
-            <a class="navbar-brand" href="{% url 'home' %}">Катышуу Системасы</a>
+            <a class="navbar-brand" href="{% url 'home' %}">
+                <i class="fas fa-school"></i> Salymbekov University
+            </a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
                 <span class="navbar-toggler-icon"></span>
             </button>
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav me-auto mb-2 mb-lg-0">
                     {% if user.is_authenticated %}
-                        <li class="nav-item">
-                            <a class="nav-link" href="{% url 'dashboard' %}">Башкаруу Панели</a>
-                        </li>
-                        {% if user.userprofile.role in 'ADMIN,MANAGER,TEACHER' %}
-                            <li class="nav-item">
-                                <a class="nav-link" href="{% url 'schedule' %}">Сабактар</a>
-                            </li>
-                        {% endif %}
-                        {% if user.userprofile.role in 'ADMIN,MANAGER' %}
-                            <li class="nav-item">
-                                <a class="nav-link" href="{% url 'report' %}">Отчеттор</a>
-                            </li>
-                        {% endif %}
-                        {% if user.userprofile.role == 'ADMIN' %}
-                            <li class="nav-item">
-                                <a class="nav-link" href="{% url 'admin:index' %}">Админ Панели</a>
-                            </li>
-                        {% endif %}
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'dashboard' %}"><i class="fas fa-tachometer-alt"></i> Башкаруу Панели</a>
+                    </li>
+                    <li class="nav-item">
+
+                        <a class="nav-link" href="{% url 'student_schedule' %}"><i class="fas fa-calendar"></i> Сабактар</a>
+                    </li>
+                    {% if user.userprofile.role in 'ADMIN,MANAGER,TEACHER' %}
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'schedule' %}"><i class="fas fa-calendar"></i> Сабактар</a>
+                    </li>
+                    {% endif %}
+                    {% if user.userprofile.role in 'ADMIN,MANAGER' %}
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'report' %}"><i class="fas fa-chart-bar"></i> Отчеттор</a>
+                    </li>
+                    {% endif %}
+                    {% if user.userprofile.role == 'ADMIN' %}
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'admin:index' %}"><i class="fas fa-user-shield"></i> Админ Панели</a>
+                    </li>
+                    {% endif %}
                     {% else %}
-                        <li class="nav-item">
-                            <a class="nav-link" href="{% url 'login' %}">Кирүү</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="{% url 'register' %}">Катталуу</a>
-                        </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'login' %}"><i class="fas fa-sign-in-alt"></i> Кирүү</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'register' %}"><i class="fas fa-user-plus"></i> Катталуу</a>
+                    </li>
                     {% endif %}
                 </ul>
                 {% if user.is_authenticated %}
-                    <ul class="navbar-nav">
-                        <li class="nav-item">
-                            <span class="nav-link">{{ user.username }} ({{ user.userprofile.role }})</span>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="{% url 'logout' %}">Чыгуу</a>
-                        </li>
-                    </ul>
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="fas fa-user"></i> {{ user.username }}
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
+                            {% if user.userprofile.role == 'STUDENT' %}
+                            {% endif %}
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item" href="{% url 'logout' %}"><i class="fas fa-sign-out-alt"></i> Чыгуу</a></li>
+                        </ul>
+                    </li>
+                </ul>
                 {% endif %}
             </div>
         </div>
     </nav>
 
-    <!-- Негизги мазмун -->
-    <div class="container mt-4">
+    <!-- Main Content -->
+    <div class="container mt-5 pt-5" style="min-height: 68vh    ;">
         {% if messages %}
-            {% for message in messages %}
-                <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
-                    {{ message }}
-                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                </div>
-            {% endfor %}
+        {% for message in messages %}
+        <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+        {% endfor %}
         {% endif %}
         {% block content %}
         {% endblock %}
     </div>
 
+    <!-- Footer -->
+    <footer class="bg-dark text-light text-center py-4 mt-5" style="width: 100%;">
+        <div class="container">
+            <p>&copy; 2025 Катышуу Системасы. Бардык укуктар корголгон.</p>
+            <p>
+                <a href="#" class="text-light"><i class="fab fa-facebook-f"></i></a>
+                <a href="#" class="text-light mx-3"><i class="fab fa-twitter"></i></a>
+                <a href="#" class="text-light"><i class="fab fa-instagram"></i></a>
+            </p>
+        </div>
+    </footer>
+
     <!-- Bootstrap JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Add smooth scroll behavior
+        document.querySelectorAll('a.nav-link').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                const href = this.getAttribute('href');
+                if (href.startsWith('#')) {
+                    e.preventDefault();
+                    document.querySelector(href).scrollIntoView({ behavior: 'smooth' });
+                }
+            });
+        });
+    </script>
 </body>
 </html>

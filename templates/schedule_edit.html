@@ -1,0 +1,110 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load schedule_filters %}
+
+{% block title %}Расписаниени түзөтүү{% endblock %}
+
+{% block content %}
+<div class="timetable-container">
+    <h2 class="timetable-title">Расписаниени түзөтүү</h2>
+    <div class="course-selector">
+        {% for course in courses %}
+        <button class="course-btn {% if forloop.first %}active-course-btn{% endif %}" 
+                onclick="showCourseTable({{ course.id }})">
+            {{ course.name }}
+        </button>
+        {% endfor %}
+    </div>
+
+    {% for course in courses %}
+    <div id="course-{{ course.id }}" class="course-table" style="display: {% if forloop.first %}block{% else %}none{% endif %}">
+        <h3>{{ course.name }}</h3>
+        <form method="POST" id="schedule-form-{{ course.id }}">
+            {% csrf_token %}
+            <table class="editabletable">
+                <thead>
+                    <tr>
+                        <th>Пара</th>
+                        <th>Убакыт</th>
+                        {% for group in course.group_set.all %}
+                        <th>{{ group.name }}</th>
+                        {% endfor %}
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for period in periods %}
+                    <tr>
+                        <td>{{ forloop.counter }}</td>
+                        <td>{{ period.start_time|time:"H:i" }} - {{ period.end_time|time:"H:i" }}</td>
+                        {% for group in course.group_set.all %}
+                        <td contenteditable="true" data-group-id="{{ group.id }}" data-period="{{ forloop.counter }}">
+                            {% with schedule=schedules|filter_schedule:group.id|add:','|add:forloop.counter %}
+                            {% if schedule %}
+                            {{ schedule.subject.subject_name|default:"" }}<br>
+                            {{ schedule.subject.teacher.name|default:"" }}<br>
+                            {{ schedule.room|default:"Кабинет жок" }}<br>
+                            <!-- Студенттердин катышуусу (эгер керек болсо) -->
+                            {% for student in group.student_set.all %}
+                            <div class="student-attendance">
+                                <label>{{ student.name }}</label>
+                                <select name="status_{{ schedule.id }}_{{ student.id }}">
+                                    <option value="">Статус</option>
+                                    <option value="Present">Келди</option>
+                                    <option value="Absent">Келген жок</option>
+                                    <option value="Late">Кечикти</option>
+                                </select>
+                            </div>
+                            {% endfor %}
+                            {% else %}
+                            Жок
+                            {% endif %}
+                            {% endwith %}
+                        </td>
+                        {% endfor %}
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            <button type="submit" class="submit-btn">Расписаниени сактоо</button>
+        </form>
+    </div>
+    {% endfor %}
+</div>
+
+<script>
+function showCourseTable(courseId) {
+    document.querySelectorAll('.course-table').forEach(table => table.style.display = 'none');
+    document.getElementById(`course-${courseId}`).style.display = 'block';
+    document.querySelectorAll('.course-btn').forEach(btn => btn.classList.remove('active-course-btn'));
+    event.target.classList.add('active-course-btn');
+}
+
+// Расписаниени түзөтүү үчүн JavaScript
+document.querySelectorAll('.editabletable td[contenteditable="true"]').forEach(cell => {
+    cell.addEventListener('blur', function() {
+        const groupId = this.getAttribute('data-group-id');
+        const period = this.getAttribute('data-period');
+        const content = this.innerText;
+        // AJAX сурамын жөнөтүү
+        fetch('/schedule/update/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': '{{ csrf_token }}'
+            },
+            body: JSON.stringify({
+                group_id: groupId,
+                period: period,
+                content: content
+            })
+        }).then(response => response.json()).then(data => {
+            if (data.success) {
+                alert('Расписание сакталды!');
+            } else {
+                alert('Ката кетти: ' + data.error);
+            }
+        });
+    });
+});
+</script>
+{% endblock %}

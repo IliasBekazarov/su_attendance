@@ -1,10 +1,185 @@
-/* static/css/style.css */
 body {
+    background: linear-gradient(135deg, #f0f4f8, #e0e7f0);
+    min-height: 100vh;
+}
+
+.bg-gradient {
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+.navbar-brand {
+    font-size: 1.5rem;
+    transition: color 0.3s;
+}
+
+.navbar-brand:hover {
+    color: #ffca28 !important;
+}
+
+.nav-link {
+    font-weight: 500;
+    transition: color 0.3s;
+}
+
+.nav-link:hover {
+    color: #ffca28 !important;
+}
+
+.card {
+    border: none;
+    border-radius: 15px;
+    background: #ffffff;
+}
+
+.card-body {
+    padding: 2rem;
+}
+
+.alert {
+    border-radius: 10px;
+}
+
+.btn-close {
+    background-color: #fff;
+}
+
+/* Timetable Container */
+.timetable-container {
+    margin: 30px;
     font-family: 'Roboto', sans-serif;
 }
-.navbar-brand {
-    font-weight: bold;
+
+/* Timetable Title */
+.timetable-title {
+    height: 60px;
+    line-height: 60px;
+    background-color: #0056b3;
+    color: #fff;
+    text-align: center;
+    margin-bottom: 25px;
+    font-size: 1.8em;
+    border-radius: 8px;
 }
-.alert {
-    margin-top: 20px;
+
+/* Course Selector */
+.course-selector {
+    width: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: space-around;
+    margin-bottom: 20px;
+}
+
+.course-btn {
+    height: 40px;
+    width: 200px;
+    border-radius: 15px;
+    background-color: #0068fa;
+    font-size: 15px;
+    color: #ddd;
+    border: none;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+.active-course-btn {
+    background-color: #1900ff;
+    color: #fff200;
+    font-size: 20px;
+}
+
+/* Timetable */
+.timetable {
+    width: 100%;
+    border-collapse: collapse;
+    text-align: center;
+    margin-bottom: 35px;
+}
+
+.timetable th, .timetable td {
+    border: 1px solid #ddd;
+    padding: 12px;
+    vertical-align: top;
+    white-space: pre-line;
+}
+
+.timetable th {
+    background: #004080;
+    color: #fff;
+    font-weight: bold;
+    text-transform: uppercase;
+}
+
+.clickable-cell {
+    cursor: pointer;
+    background-color: #fcfcfc;
+    transition: background-color 0.3s ease, transform 0.2s ease;
+}
+
+.clickable-cell:hover {
+    background-color: #e3f2fd;
+    transform: scale(1.03);
+}
+
+/* Modal */
+.modal-content {
+    border-radius: 5px;
+    padding: 20px;
+    max-height: 80vh;
+    overflow-y: auto;
+}
+
+.student-list {
+    list-style-type: none;
+    padding: 0;
+}
+
+.student-item {
+    margin-bottom: 12px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.student-item label {
+    font-size: 1.1em;
+    cursor: pointer;
+}
+
+.for-late {
+    width: 80px;
+}
+
+.submit-btn {
+    width: 130px;
+    height: 40px;
+    background-color: #0069d9;
+    border: none;
+    border-radius: 6px;
+    color: #fff;
+    font-weight: bold;
+    font-size: 1.1em;
+    cursor: pointer;
+    transition: background-color 0.3s ease, transform 0.2s ease;
+}
+
+.submit-btn:hover {
+    background-color: #004bb5;
+    transform: scale(1.07);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .course-selector {
+        width: 100%;
+        flex-direction: column;
+    }
+    .course-btn, .active-course-btn {
+        width: 100%;
+        margin-bottom: 10px;
+    }
+    .timetable th, .timetable td {
+        font-size: 0.9rem;
+        padding: 8px;
+    }
 }
