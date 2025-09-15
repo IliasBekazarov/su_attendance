@@ -1,0 +1,287 @@
+{% extends 'base.html' %}
+{% load django_bootstrap5 %}
+{% block title %}Сабак Башкаруу{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>Сабак Башкаруу</h2>
+        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addScheduleModal">
+            <i class="fas fa-plus me-2"></i>Жаңы Сабак Кошуу
+        </button>
+    </div>
+
+    <!-- Филтр панели -->
+    <div class="card mb-4">
+        <div class="card-header">
+            <h5><i class="fas fa-filter me-2"></i>Филтр</h5>
+        </div>
+        <div class="card-body">
+            <form method="GET" class="row g-3">
+                <div class="col-md-3">
+                    <label class="form-label">Курс:</label>
+                    <select name="course" class="form-select">
+                        <option value="">Бардык курстар</option>
+                        {% for course in courses %}
+                        <option value="{{ course.id }}" {% if request.GET.course == course.id|stringformat:"s" %}selected{% endif %}>
+                            {{ course.name }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Группа:</label>
+                    <select name="group" class="form-select">
+                        <option value="">Бардык группалар</option>
+                        {% for group in groups %}
+                        <option value="{{ group.id }}" {% if request.GET.group == group.id|stringformat:"s" %}selected{% endif %}>
+                            {{ group.name }} ({{ group.course.name }})
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Мугалим:</label>
+                    <select name="teacher" class="form-select">
+                        <option value="">Бардык мугалимдер</option>
+                        {% for teacher in teachers %}
+                        <option value="{{ teacher.id }}" {% if request.GET.teacher == teacher.id|stringformat:"s" %}selected{% endif %}>
+                            {{ teacher.name }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Күн:</label>
+                    <select name="day" class="form-select">
+                        <option value="">Бардык күндөр</option>
+                        <option value="Monday" {% if request.GET.day == 'Monday' %}selected{% endif %}>Дүйшөмбү</option>
+                        <option value="Tuesday" {% if request.GET.day == 'Tuesday' %}selected{% endif %}>Шейшемби</option>
+                        <option value="Wednesday" {% if request.GET.day == 'Wednesday' %}selected{% endif %}>Шаршемби</option>
+                        <option value="Thursday" {% if request.GET.day == 'Thursday' %}selected{% endif %}>Бейшемби</option>
+                        <option value="Friday" {% if request.GET.day == 'Friday' %}selected{% endif %}>Жума</option>
+                        <option value="Saturday" {% if request.GET.day == 'Saturday' %}selected{% endif %}>Ишемби</option>
+                    </select>
+                </div>
+                <div class="col-12">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-search me-2"></i>Чыпкалоо
+                    </button>
+                    <a href="{% url 'manage_schedule' %}" class="btn btn-secondary ms-2">
+                        <i class="fas fa-times me-2"></i>Тазалоо
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Курс боюнча иерархия -->
+    <div class="row">
+        {% for course_data in courses_hierarchy %}
+        <div class="col-12 mb-4">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0">
+                        <i class="fas fa-graduation-cap me-2"></i>{{ course_data.course.name }}
+                        <span class="badge bg-light text-dark ms-2">{{ course_data.groups|length }} группа</span>
+                    </h4>
+                </div>
+                <div class="card-body">
+                    {% for group_data in course_data.groups %}
+                    <div class="mb-4">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h5 class="text-info">
+                                <i class="fas fa-users me-2"></i>{{ group_data.group.name }}
+                                <small class="text-muted">({{ group_data.students_count }} студент)</small>
+                            </h5>
+                            <span class="badge bg-primary">
+                                <i class="fas fa-calendar-alt me-1"></i>{{ group_data.schedules|length }} сабак
+                            </span>
+                        </div>
+                        
+                        <!-- Группанын расписаниеси -->
+                        {% if group_data.schedules %}
+                        <div class="table-responsive">
+                            <table class="table table-sm table-hover">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Күн</th>
+                                        <th>Убакыт</th>
+                                        <th>Предмет</th>
+                                        <th>Мугалим</th>
+                                        <th>Аракеттер</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for schedule in group_data.schedules %}
+                                    <tr>
+                                        <td>{{ schedule.get_day_display }}</td>
+                                        <td>{{ schedule.start_time|time:"H:i" }} - {{ schedule.end_time|time:"H:i" }}</td>
+                                        <td>{{ schedule.subject.subject_name }}</td>
+                                        <td>{{ schedule.subject.teacher.name }}</td>
+                                        <td>
+                                            <button class="btn btn-sm btn-outline-primary me-1" 
+                                                    onclick="editSchedule({{ schedule.id }})">
+                                                <i class="fas fa-edit"></i>
+                                            </button>
+                                            <button class="btn btn-sm btn-outline-danger" 
+                                                    onclick="deleteSchedule({{ schedule.id }})">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                        {% else %}
+                        <div class="text-center text-muted py-3">
+                            <i class="fas fa-calendar-times fa-2x mb-2"></i>
+                            <p>Бул группа үчүн расписание жок</p>
+                        </div>
+                        {% endif %}
+                    </div>
+                    {% if not forloop.last %}<hr>{% endif %}
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+<!-- Add Schedule Modal -->
+<div class="modal fade" id="addScheduleModal" tabindex="-1" aria-labelledby="addScheduleModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="addScheduleModalLabel">Жаңы Сабак Кошуу</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="addScheduleForm">
+                    <div class="mb-3">
+                        <label for="subject" class="form-label">Предмет</label>
+                        <select class="form-select" id="subject" name="subject_id" required>
+                            <option value="">Предмет тандаңыз...</option>
+                            {% for subject in subjects %}
+                            <option value="{{ subject.id }}">{{ subject.subject_name }} - {{ subject.teacher.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="group" class="form-label">Группа</label>
+                        <select class="form-select" id="group" name="group_id" required>
+                            <option value="">Группа тандаңыз...</option>
+                            {% for group in groups %}
+                            <option value="{{ group.id }}">{{ group.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="day" class="form-label">Күн</label>
+                        <select class="form-select" id="day" name="day" required>
+                            <option value="">Күн тандаңыз...</option>
+                            <option value="Monday">Дүйшөмбү</option>
+                            <option value="Tuesday">Шейшемби</option>
+                            <option value="Wednesday">Шаршемби</option>
+                            <option value="Thursday">Бейшемби</option>
+                            <option value="Friday">Жума</option>
+                            <option value="Saturday">Ишемби</option>
+                        </select>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="start_time" class="form-label">Баштоо убактысы</label>
+                                <input type="time" class="form-control" id="start_time" name="start_time" required>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="end_time" class="form-label">Аяктоо убактысы</label>
+                                <input type="time" class="form-control" id="end_time" name="end_time" required>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Жабуу</button>
+                <button type="button" class="btn btn-primary" onclick="saveSchedule()">Сактоо</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function saveSchedule() {
+    const formData = new FormData(document.getElementById('addScheduleForm'));
+    
+    fetch('{% url "manage_schedule" %}', {
+        method: 'POST',
+        body: formData,
+        headers: {
+            'X-CSRFToken': '{{ csrf_token }}'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            location.reload();
+        } else {
+            alert('Ката: ' + (data.error || 'Белгисиз ката'));
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Сабак кошууда ката болду');
+    });
+}
+
+function editSchedule(scheduleId) {
+    fetch(`/schedule/get/${scheduleId}/`)
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            const schedule = data.schedule;
+            document.getElementById('edit_schedule_id').value = schedule.id;
+            document.getElementById('edit_subject').value = schedule.subject_id;
+            document.getElementById('edit_group').value = schedule.group_id;
+            document.getElementById('edit_day').value = schedule.day;
+            document.getElementById('edit_start_time').value = schedule.start_time;
+            document.getElementById('edit_end_time').value = schedule.end_time;
+            
+            new bootstrap.Modal(document.getElementById('editScheduleModal')).show();
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Сабак маалыматын алууда ката болду');
+    });
+}
+
+function deleteSchedule(scheduleId) {
+    if (confirm('Бул сабакты өчүрүүнү каалайсызбы?')) {
+        fetch(`/schedule/delete/${scheduleId}/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': '{{ csrf_token }}'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                location.reload();
+            } else {
+                alert('Ката: ' + (data.error || 'Белгисиз ката'));
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Сабак өчүрүүдө ката болду');
+        });
+    }
+}
+</script>
+{% endblock %}

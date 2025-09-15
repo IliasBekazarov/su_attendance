@@ -1,0 +1,94 @@
+{% extends 'base.html' %}
+{% block title %}Менин бошотуу сурамдарым{% endblock %}
+{% block content %}
+<div class="container mt-5">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>📋 Менин бошотуу сурамдарым</h2>
+        <a href="{% url 'submit_leave_request' %}" class="btn btn-primary">
+            ➕ Жаңы сурам жөнөтүү
+        </a>
+    </div>
+    
+    {% if leave_requests %}
+    <div class="table-responsive">
+        <table class="table table-hover">
+            <thead class="table-primary">
+                <tr>
+                    <th>Түрү</th>
+                    <th>Мөөнөтү</th>
+                    <th>Күндөрдүн саны</th>
+                    <th>Себеби</th>
+                    <th>Статус</th>
+                    <th>Жөнөтүлгөн күнү</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for request in leave_requests %}
+                <tr>
+                    <td>
+                        <span class="badge bg-info">
+                            {{ request.get_leave_type_display }}
+                        </span>
+                    </td>
+                    <td>
+                        <small class="text-muted">
+                            {{ request.start_date }} дөн<br>
+                            {{ request.end_date }} га чейин
+                        </small>
+                    </td>
+                    <td>
+                        <strong>{{ request.duration }} күн</strong>
+                    </td>
+                    <td>
+                        <div style="max-width: 200px;">
+                            {{ request.reason|truncatewords:10 }}
+                        </div>
+                    </td>
+                    <td>
+                        {% if request.status == 'PENDING' %}
+                            <span class="badge bg-warning text-dark">⏳ Күтүүдө</span>
+                        {% elif request.status == 'APPROVED' %}
+                            <span class="badge bg-success">✅ Бекитилген</span>
+                            {% if request.approved_by %}
+                                <br><small class="text-muted">{{ request.approved_by.get_full_name|default:request.approved_by.username }}</small>
+                            {% endif %}
+                        {% else %}
+                            <span class="badge bg-danger">❌ Четке кагылган</span>
+                            {% if request.approved_by %}
+                                <br><small class="text-muted">{{ request.approved_by.get_full_name|default:request.approved_by.username }}</small>
+                            {% endif %}
+                        {% endif %}
+                    </td>
+                    <td>
+                        <small class="text-muted">
+                            {{ request.created_at|date:"d.m.Y H:i" }}
+                        </small>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div class="card">
+        <div class="card-body text-center py-5">
+            <h5 class="text-muted">📝 Сизде азырынча бошотуу сурамдары жок</h5>
+            <p class="text-muted">Жаңы сурам жөнөтүү үчүн жогорудагы баскычты басыңыз</p>
+            <a href="{% url 'submit_leave_request' %}" class="btn btn-primary">
+                ➕ Биринчи сурам жөнөтүү
+            </a>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<style>
+.table th {
+    border-top: none;
+    font-weight: 600;
+}
+.badge {
+    font-size: 0.875rem;
+}
+</style>
+{% endblock %}

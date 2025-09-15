@@ -1,0 +1,278 @@
+{% extends 'base.html' %}
+{% load django_bootstrap5 %}
+
+{% block title %}Сабактар Көрүү{% endblock %}
+
+{% block content %}
+<div class="container-fluid mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2><i class="fas fa-book-open me-2"></i>Сабактар Панели</h2>
+        <div class="d-flex gap-2">
+            <span class="badge bg-primary fs-6">
+                <i class="fas fa-books me-1"></i>Жалпы сабактар: {{ total_subjects }}
+            </span>
+        </div>
+    </div>
+
+    <!-- Статистика карталары -->
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <div class="card bg-info text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h5><i class="fas fa-graduation-cap me-2"></i>Курстар боюнча</h5>
+                            <p class="mb-0">{{ subjects_by_course|length }} курста сабактар бар</p>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-chart-pie fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card bg-success text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h5><i class="fas fa-chalkboard-teacher me-2"></i>Мугалимдер боюнча</h5>
+                            <p class="mb-0">{{ subjects_by_teacher|length }} мугалим сабак өтөт</p>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-users fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Филтр панели -->
+    <div class="card mb-4">
+        <div class="card-header">
+            <h5><i class="fas fa-filter me-2"></i>Филтр жана Издөө</h5>
+        </div>
+        <div class="card-body">
+            <form method="get" class="row g-3">
+                <div class="col-md-3">
+                    <label for="course" class="form-label">Курс</label>
+                    <select class="form-select" id="course" name="course">
+                        <option value="">Бардык курстар</option>
+                        {% for course in courses %}
+                        <option value="{{ course.id }}" 
+                                {% if course_filter == course.id|stringformat:"s" %}selected{% endif %}>
+                            {{ course.name }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label for="teacher" class="form-label">Мугалим</label>
+                    <select class="form-select" id="teacher" name="teacher">
+                        <option value="">Бардык мугалимдер</option>
+                        {% for teacher in teachers %}
+                        <option value="{{ teacher.id }}" 
+                                {% if teacher_filter == teacher.id|stringformat:"s" %}selected{% endif %}>
+                            {{ teacher.name }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <label for="search" class="form-label">Сабак атын издөө</label>
+                    <input type="text" class="form-control" id="search" name="search" 
+                           value="{{ search }}" placeholder="Сабак атын жазыңыз...">
+                </div>
+                <div class="col-md-2 d-flex align-items-end">
+                    <button type="submit" class="btn btn-primary w-100">
+                        <i class="fas fa-search me-1"></i>Издөө
+                    </button>
+                </div>
+            </form>
+            {% if course_filter or teacher_filter or search %}
+            <div class="mt-2">
+                <a href="{% url 'manage_subjects' %}" class="btn btn-outline-secondary btn-sm">
+                    <i class="fas fa-times me-1"></i>Филтрди тазалоо
+                </a>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Сабактар таблицасы -->
+    <div class="card">
+        <div class="card-header">
+            <h5><i class="fas fa-table me-2"></i>Сабактар тизмеси</h5>
+        </div>
+        <div class="card-body">
+            {% if subjects_data %}
+            <div class="table-responsive">
+                <table class="table table-hover table-bordered">
+                    <thead class="table-dark">
+                        <tr>
+                            <th width="5%">#</th>
+                            <th width="25%">Сабак ат</th>
+                            <th width="20%">Мугалим</th>
+                            <th width="15%">Курс</th>
+                            <th width="10%">Расписание</th>
+                            <th width="10%">Студенттер</th>
+                            <th width="15%">Статус</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for data in subjects_data %}
+                        <tr>
+                            <td class="text-center">{{ forloop.counter }}</td>
+                            <td>
+                                <div class="d-flex align-items-center">
+                                    <i class="fas fa-book text-primary me-2"></i>
+                                    <strong>{{ data.subject.subject_name }}</strong>
+                                </div>
+                            </td>
+                            <td>
+                                {% if data.subject.teacher %}
+                                    <div class="d-flex align-items-center">
+                                        <i class="fas fa-user-tie text-success me-2"></i>
+                                        {{ data.subject.teacher.name }}
+                                    </div>
+                                {% else %}
+                                    <span class="text-muted">
+                                        <i class="fas fa-user-times me-1"></i>Мугалим дайындалган жок
+                                    </span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <span class="badge bg-info">
+                                    <i class="fas fa-graduation-cap me-1"></i>{{ data.subject.course.name }}
+                                </span>
+                            </td>
+                            <td class="text-center">
+                                {% if data.schedule_count > 0 %}
+                                    <span class="badge bg-success">
+                                        <i class="fas fa-calendar-check me-1"></i>{{ data.schedule_count }}
+                                    </span>
+                                {% else %}
+                                    <span class="badge bg-warning">
+                                        <i class="fas fa-calendar-times me-1"></i>Жок
+                                    </span>
+                                {% endif %}
+                            </td>
+                            <td class="text-center">
+                                {% if data.students_count > 0 %}
+                                    <span class="badge bg-primary">
+                                        <i class="fas fa-users me-1"></i>{{ data.students_count }}
+                                    </span>
+                                {% else %}
+                                    <span class="badge bg-secondary">
+                                        <i class="fas fa-user-slash me-1"></i>0
+                                    </span>
+                                {% endif %}
+                            </td>
+                            <td class="text-center">
+                                {% if data.subject.teacher and data.schedule_count > 0 %}
+                                    <span class="badge bg-success">
+                                        <i class="fas fa-check-circle me-1"></i>Активдуу
+                                    </span>
+                                {% elif data.subject.teacher %}
+                                    <span class="badge bg-warning">
+                                        <i class="fas fa-exclamation-triangle me-1"></i>Расписание жок
+                                    </span>
+                                {% else %}
+                                    <span class="badge bg-danger">
+                                        <i class="fas fa-times-circle me-1"></i>Мугалим жок
+                                    </span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="text-center py-5">
+                <i class="fas fa-search fa-3x text-muted mb-3"></i>
+                <h5 class="text-muted">Сабактар табылган жок</h5>
+                <p class="text-muted">Башка филтр тандап көрүңүз</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Курс боюнча топтолгон көрүнүш -->
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5><i class="fas fa-layer-group me-2"></i>Курстар боюнча топтолгон көрүнүш</h5>
+                </div>
+                <div class="card-body">
+                    {% for course_name, course_subjects in subjects_by_course.items %}
+                    <div class="mb-4">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h6 class="text-primary">
+                                <i class="fas fa-graduation-cap me-2"></i>{{ course_name }}
+                            </h6>
+                            <span class="badge bg-primary">{{ course_subjects|length }} сабак</span>
+                        </div>
+                        
+                        <div class="row">
+                            {% for subject in course_subjects %}
+                            <div class="col-md-6 col-lg-4 mb-2">
+                                <div class="card border-start border-primary border-3 h-100">
+                                    <div class="card-body py-2">
+                                        <div class="d-flex justify-content-between align-items-center">
+                                            <div>
+                                                <small class="text-muted">{{ subject.subject_name }}</small><br>
+                                                <small class="text-success">
+                                                    <i class="fas fa-user-tie me-1"></i>
+                                                    {{ subject.teacher.name|default:"Мугалим жок" }}
+                                                </small>
+                                            </div>
+                                            <div class="text-end">
+                                                {% for data in subjects_data %}
+                                                    {% if data.subject.id == subject.id %}
+                                                        <small class="text-info d-block">
+                                                            <i class="fas fa-calendar me-1"></i>{{ data.schedule_count }}
+                                                        </small>
+                                                        <small class="text-primary d-block">
+                                                            <i class="fas fa-users me-1"></i>{{ data.students_count }}
+                                                        </small>
+                                                    {% endif %}
+                                                {% endfor %}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    {% if not forloop.last %}<hr>{% endif %}
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Автоматтык филтр колдонуу
+document.addEventListener('DOMContentLoaded', function() {
+    const courseSelect = document.getElementById('course');
+    const teacherSelect = document.getElementById('teacher');
+    
+    courseSelect.addEventListener('change', function() {
+        if (this.value) {
+            this.form.submit();
+        }
+    });
+    
+    teacherSelect.addEventListener('change', function() {
+        if (this.value) {
+            this.form.submit();
+        }
+    });
+});
+</script>
+{% endblock %}

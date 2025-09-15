@@ -1,8 +1,18 @@
 
 from django.contrib import admin
 from django.urls import path, include
+from django.conf import settings
+from django.conf.urls.static import static
+from django.views.generic import RedirectView
 
 urlpatterns = [
-    path('admin/', admin.site.urls),  # django-autocomplete-light URL даректерин кошуу
-    path('', include('core.urls')),  # core тиркемесинин URL даректерин кошуу
+    path('admin/', admin.site.urls),
+    path('', include('core.urls')),
+    path('api/v1/', include('core.api_urls')),  # API endpoints
+    path('favicon.ico', RedirectView.as_view(url='/static/favicon.ico', permanent=True)),
 ]
+
+# Static жана media файлдар үчүн URL'дер (development режиминде)
+if settings.DEBUG:
+    urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
+    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT) if hasattr(settings, 'MEDIA_URL') else []

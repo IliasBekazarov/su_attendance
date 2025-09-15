@@ -5,8 +5,10 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Salymbekov University</title>
+    <!-- CSRF token for AJAX requests -->
+    <meta name="csrf-token" content="{{ csrf_token }}" />
     <!-- Bootstrap CSS -->
-    <link rel="icon" type="image/png" href="{% static 'css/su_logo.png' %}" />
+    <link rel="icon" type="image/x-icon" href="{% static 'favicon.ico' %}" />
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
     <link rel="stylesheet" href="{% static 'css/style.css' %}" />
     <!-- Font Awesome for icons -->
@@ -29,17 +31,42 @@
                         <a class="nav-link" href="{% url 'dashboard' %}"><i class="fas fa-tachometer-alt"></i> Башкаруу Панели</a>
                     </li>
                     <li class="nav-item">
-
-                        <a class="nav-link" href="{% url 'student_schedule' %}"><i class="fas fa-calendar"></i> Сабактар</a>
+                        <a class="nav-link" href="{% url 'universal_schedule' %}"><i class="fas fa-calendar-week"></i> Расписание</a>
                     </li>
+                    {% if user.userprofile.role == 'STUDENT' %}
+                    <liFF class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="leaveDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="fas fa-file-medical"></i> Бошотуу
+                        </a>
+                        <ul class="dropdown-menu" aria-labelledby="leaveDropdown">
+                            <li><a class="dropdown-item" href="{% url 'submit_leave_request' %}">
+                                <i class="fas fa-plus"></i> Жаңы сурам
+                            </a></li>
+                            <li><a class="dropdown-item" href="{% url 'my_leave_requests' %}">
+                                <i class="fas fa-list"></i> Менин сурамдарым
+                            </a></li>
+                        </ul>
+                    </liFF
+                    {% endif %}
+                    {% if user.userprofile.role == 'TEACHER' %}
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'teacher_attendance' %}"><i class="fas fa-check-square"></i> Жоктоо</a>
+                    </li>
+                    {% endif %}
                     {% if user.userprofile.role in 'ADMIN,MANAGER,TEACHER' %}
                     <li class="nav-item">
-                        <a class="nav-link" href="{% url 'schedule' %}"><i class="fas fa-calendar"></i> Сабактар</a>
+                        <a class="nav-link" href="{% url 'manage_leave_requests' %}"><i class="fas fa-clipboard-list"></i> Бошотуу сурамдары</a>
                     </li>
                     {% endif %}
                     {% if user.userprofile.role in 'ADMIN,MANAGER' %}
                     <li class="nav-item">
                         <a class="nav-link" href="{% url 'report' %}"><i class="fas fa-chart-bar"></i> Отчеттор</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'manage_schedule' %}"><i class="fas fa-cogs"></i> Расписание башкаруу</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'manage_subjects' %}"><i class="fas fa-book-open"></i> Сабактар башкаруу</a>
                     </li>
                     {% endif %}
                     {% if user.userprofile.role == 'ADMIN' %}
@@ -63,6 +90,12 @@
                             <i class="fas fa-user"></i> {{ user.username }}
                         </a>
                         <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
+                            <li><a class="dropdown-item" href="{% url 'notifications' %}">
+                                <i class="fas fa-bell"></i> Билдирмелер
+                                {% comment %}{% if unread_notifications_count %}
+                                    <span class="badge bg-danger ms-1">{{ unread_notifications_count }}</span>
+                                {% endif %}{% endcomment %}
+                            </a></li>
                             {% if user.userprofile.role == 'STUDENT' %}
                             {% endif %}
                             <li><hr class="dropdown-divider"></li>

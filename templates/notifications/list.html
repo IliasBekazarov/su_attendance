@@ -1,0 +1,117 @@
+{% extends 'base.html' %}
+{% block title %}Менин билдирмелерим{% endblock %}
+{% block content %}
+<div class="container mt-5">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>🔔 Менин билдирмелерим</h2>
+        <div>
+            {% if unread_count > 0 %}
+                <span class="badge bg-danger me-2">{{ unread_count }} жаңы</span>
+                <a href="{% url 'mark_all_notifications_read' %}" class="btn btn-sm btn-outline-primary">
+                    ✅ Баарын окулган деп белгилөө
+                </a>
+            {% endif %}
+            {% if request.user.userprofile.role in 'ADMIN,MANAGER' %}
+                <a href="{% url 'send_bulk_notification' %}" class="btn btn-sm btn-success ms-2">
+                    ➕ Жаңы билдирме жөнөтүү
+                </a>
+            {% endif %}
+        </div>
+    </div>
+    
+    {% if notifications %}
+        <div class="row">
+            {% for notification in notifications %}
+            <div class="col-md-12 mb-3">
+                <div class="card {% if not notification.is_read %}border-primary{% endif %} shadow-sm">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div class="flex-grow-1">
+                                <div class="d-flex align-items-center mb-2">
+                                    {% if notification.notification_type == 'ABSENCE' %}
+                                        <span class="badge bg-warning text-dark me-2">⚠️ Жок болуу</span>
+                                    {% elif notification.notification_type == 'LEAVE_REQUEST' %}
+                                        <span class="badge bg-info me-2">📝 Бошотуу сурамы</span>
+                                    {% elif notification.notification_type == 'LEAVE_APPROVED' %}
+                                        <span class="badge bg-success me-2">✅ Бекитилди</span>
+                                    {% elif notification.notification_type == 'LEAVE_REJECTED' %}
+                                        <span class="badge bg-danger me-2">❌ Четке кагылды</span>
+                                    {% else %}
+                                        <span class="badge bg-secondary me-2">📢 Жалпы</span>
+                                    {% endif %}
+                                    
+                                    {% if not notification.is_read %}
+                                        <span class="badge bg-primary">🆕 Жаңы</span>
+                                    {% endif %}
+                                </div>
+                                
+                                <h6 class="card-title">{{ notification.title }}</h6>
+                                <p class="card-text">{{ notification.message|linebreaks }}</p>
+                                
+                                <div class="text-muted small">
+                                    <i class="fas fa-clock"></i> {{ notification.created_at|date:"d.m.Y H:i" }}
+                                    {% if notification.sender %}
+                                        | <i class="fas fa-user"></i> {{ notification.sender.get_full_name|default:notification.sender.username }}
+                                    {% endif %}
+                                </div>
+                            </div>
+                            
+                            <div class="ms-3">
+                                {% if not notification.is_read %}
+                                    <a href="{% url 'mark_notification_read' notification.id %}" 
+                                       class="btn btn-sm btn-outline-primary">
+                                        👁️ Окулган
+                                    </a>
+                                {% else %}
+                                    <span class="text-success">✅</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        {% if notification.leave_request %}
+                            <div class="mt-3 p-2 bg-light rounded">
+                                <small class="text-muted">
+                                    <strong>Бошотуу сурамы:</strong> 
+                                    {{ notification.leave_request.start_date }} - {{ notification.leave_request.end_date }}
+                                    ({{ notification.leave_request.duration }} күн)
+                                </small>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        
+        <!-- Pagination can be added here if needed -->
+        
+    {% else %}
+        <div class="card">
+            <div class="card-body text-center py-5">
+                <h5 class="text-muted">📭 Сизде билдирмелер жок</h5>
+                <p class="text-muted">Жаңы билдирмелер келгенде бул жерде көрүнөт</p>
+            </div>
+        </div>
+    {% endif %}
+</div>
+
+<style>
+.card {
+    border: 1px solid #dee2e6;
+    transition: all 0.2s ease;
+}
+
+.card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.12);
+}
+
+.border-primary {
+    border-left: 4px solid #0d6efd !important;
+}
+
+.badge {
+    font-size: 0.75rem;
+}
+</style>
+{% endblock %}

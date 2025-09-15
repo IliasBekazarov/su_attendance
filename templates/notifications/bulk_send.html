@@ -1,0 +1,75 @@
+{% extends 'base.html' %}
+{% block title %}Көптөгөн билдирме жөнөтүү{% endblock %}
+{% block content %}
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow">
+                <div class="card-header bg-success text-white">
+                    <h4 class="mb-0">📢 Көптөгөн билдирме жөнөтүү</h4>
+                </div>
+                <div class="card-body">
+                    <form method="POST">
+                        {% csrf_token %}
+                        
+                        <div class="mb-3">
+                            <label for="title" class="form-label">Билдирменин аталышы</label>
+                            <input type="text" class="form-control" id="title" name="title" required maxlength="200">
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="message" class="form-label">Билдирменин мазмуну</label>
+                            <textarea class="form-control" id="message" name="message" rows="5" required></textarea>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="recipient_type" class="form-label">Кимге жөнөтүү</label>
+                            <select class="form-select" id="recipient_type" name="recipient_type" required>
+                                <option value="">Тандаңыз</option>
+                                <option value="all_students">🎓 Бардык студенттер</option>
+                                <option value="all_parents">👨‍👩‍👧‍👦 Бардык ата-энелер</option>
+                                <option value="specific_group">👥 Белгилүү группага</option>
+                            </select>
+                        </div>
+                        
+                        <div class="mb-3" id="group_selection" style="display: none;">
+                            <label for="group_id" class="form-label">Группаны тандаңыз</label>
+                            <select class="form-select" id="group_id" name="group_id">
+                                <option value="">Группа тандаңыз</option>
+                                {% for group in groups %}
+                                <option value="{{ group.id }}">{{ group.name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        
+                        <div class="d-flex justify-content-between">
+                            <a href="{% url 'notifications' %}" class="btn btn-secondary">
+                                ← Артка кайтуу
+                            </a>
+                            <button type="submit" class="btn btn-success">
+                                📤 Билдирме жөнөтүү
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.getElementById('recipient_type').addEventListener('change', function() {
+    const groupSelection = document.getElementById('group_selection');
+    const groupSelect = document.getElementById('group_id');
+    
+    if (this.value === 'specific_group') {
+        groupSelection.style.display = 'block';
+        groupSelect.required = true;
+    } else {
+        groupSelection.style.display = 'none';
+        groupSelect.required = false;
+        groupSelect.value = '';
+    }
+});
+</script>
+{% endblock %}

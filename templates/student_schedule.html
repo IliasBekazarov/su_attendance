@@ -20,7 +20,7 @@
                 <td>{{ forloop.counter }}</td>
                 <td>{{ schedule.start_time|time:"H:i" }} - {{ schedule.end_time|time:"H:i" }}</td>
                 <td>
-                    {{ schedule.subject.subject_name }}<br>
+                    {{ schedule.subject.name }}<br>
                     {{ schedule.subject.teacher.name }}<br>
                     {{ schedule.room|default:"Кабинет жок" }}
                 </td>

@@ -1,0 +1,170 @@
+{% extends 'base.html' %}
+{% block title %}Бошотуу сурамдарын башкаруу{% endblock %}
+{% block content %}
+<div class="container mt-5">
+    <h2 class="mb-4">🛠️ Бошотуу сурамдарын башкаруу</h2>
+    
+    <!-- Күтүүдөгү сурамдар -->
+    <div class="card mb-4">
+        <div class="card-header bg-warning text-dark">
+            <h5 class="mb-0">⏳ Күтүүдөгү сурамдар ({{ pending_requests|length }})</h5>
+        </div>
+        <div class="card-body">
+            {% if pending_requests %}
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Студент</th>
+                            <th>Түрү</th>
+                            <th>Мөөнөтү</th>
+                            <th>Күндөр</th>
+                            <th>Себеби</th>
+                            <th>Жөнөтүлгөн</th>
+                            <th>Аракеттер</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for request in pending_requests %}
+                        <tr>
+                            <td>
+                                <strong>{{ request.student.name }}</strong><br>
+                                <small class="text-muted">{{ request.student.group.name }}</small>
+                            </td>
+                            <td>
+                                <span class="badge bg-info">
+                                    {{ request.get_leave_type_display }}
+                                </span>
+                            </td>
+                            <td>
+                                <small>
+                                    {{ request.start_date }}<br>
+                                    {{ request.end_date }}
+                                </small>
+                            </td>
+                            <td>
+                                <strong>{{ request.duration }} күн</strong>
+                            </td>
+                            <td>
+                                <div style="max-width: 200px;">
+                                    {{ request.reason|truncatewords:15 }}
+                                </div>
+                            </td>
+                            <td>
+                                <small class="text-muted">
+                                    {{ request.created_at|date:"d.m.Y H:i" }}
+                                </small>
+                            </td>
+                            <td>
+                                <form method="POST" action="{% url 'approve_leave_request' request.id %}" class="d-inline">
+                                    {% csrf_token %}
+                                    <button type="submit" name="action" value="approve" 
+                                            class="btn btn-success btn-sm"
+                                            onclick="return confirm('Бул сурамды бекитесизби?')">
+                                        ✅ Бекитүү
+                                    </button>
+                                    <button type="submit" name="action" value="reject" 
+                                            class="btn btn-danger btn-sm"
+                                            onclick="return confirm('Бул сурамды четке кагасызбы?')">
+                                        ❌ Четке кагуу
+                                    </button>
+                                </form>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="text-center py-4">
+                <p class="text-muted">✅ Күтүүдөгү сурамдар жок</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+    
+    <!-- Бардык сурамдардын тарыхы -->
+    <div class="card">
+        <div class="card-header bg-secondary text-white">
+            <h5 class="mb-0">📜 Бардык сурамдардын тарыхы</h5>
+        </div>
+        <div class="card-body">
+            {% if all_requests %}
+            <div class="table-responsive">
+                <table class="table table-hover table-sm">
+                    <thead>
+                        <tr>
+                            <th>Студент</th>
+                            <th>Түрү</th>
+                            <th>Мөөнөтү</th>
+                            <th>Статус</th>
+                            <th>Чечким кабыл алган</th>
+                            <th>Дата</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for request in all_requests %}
+                        <tr>
+                            <td>
+                                <strong>{{ request.student.name }}</strong><br>
+                                <small class="text-muted">{{ request.student.group.name }}</small>
+                            </td>
+                            <td>
+                                <span class="badge bg-info">
+                                    {{ request.get_leave_type_display }}
+                                </span>
+                            </td>
+                            <td>
+                                <small>
+                                    {{ request.start_date }} - {{ request.end_date }}<br>
+                                    <strong>({{ request.duration }} күн)</strong>
+                                </small>
+                            </td>
+                            <td>
+                                {% if request.status == 'PENDING' %}
+                                    <span class="badge bg-warning text-dark">⏳ Күтүүдө</span>
+                                {% elif request.status == 'APPROVED' %}
+                                    <span class="badge bg-success">✅ Бекитилген</span>
+                                {% else %}
+                                    <span class="badge bg-danger">❌ Четке кагылган</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if request.approved_by %}
+                                    {{ request.approved_by.get_full_name|default:request.approved_by.username }}
+                                {% else %}
+                                    <small class="text-muted">—</small>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <small class="text-muted">
+                                    {{ request.created_at|date:"d.m.Y H:i" }}
+                                </small>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="text-center py-4">
+                <p class="text-muted">📋 Азырынча сурамдар жок</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<style>
+.table th {
+    border-top: none;
+    font-weight: 600;
+}
+.badge {
+    font-size: 0.875rem;
+}
+.btn-sm {
+    padding: 0.25rem 0.5rem;
+}
+</style>
+{% endblock %}

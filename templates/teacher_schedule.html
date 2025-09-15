@@ -1,82 +1,107 @@
 {% extends 'base.html' %}
 {% load static %}
-{% load schedule_filters %}
 
 {% block title %}Мугалимдин расписаниеси{% endblock %}
 
 {% block content %}
-<div class="timetable-container">
-    <h2 class="timetable-title">Мугалимдин расписаниеси</h2>
-    <div class="course-selector">
-        {% for course in courses %}
-        <button class="course-btn {% if forloop.first %}active-course-btn{% endif %}" 
-                onclick="showCourseTable({{ course.id }})">
-            {{ course.name }}
-        </button>
-        {% endfor %}
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2><i class="fas fa-chalkboard-teacher me-2"></i>Менин расписанием</h2>
+            <p class="text-muted mb-0">{{ teacher.name }} - Мугалим расписаниеси</p>
+        </div>
+        
+        <!-- Статистика -->
+        <div class="d-flex gap-3">
+            <div class="card border-primary" style="min-width: 120px;">
+                <div class="card-body text-center p-2">
+                    <h5 class="card-title text-primary mb-1">{{ schedules.count }}</h5>
+                    <p class="card-text small mb-0">Менин сабактарым</p>
+                </div>
+            </div>
+        </div>
     </div>
 
-    {% for course in courses %}
-    <div id="course-{{ course.id }}" class="course-table" style="display: {% if forloop.first %}block{% else %}none{% endif %}">
-        <h3>{{ course.name }}</h3>
-        <form method="POST">
-            {% csrf_token %}
-            <table class="editabletable">
-                <thead>
-                    <tr>
-                        <th>Пара</th>
-                        <th>Убакыт</th>
-                        {% for group in course.group_set.all %}
-                        <th>{{ group.name }}</th>
+    <!-- Расписание таблицасы -->
+    <div class="card">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-bordered mb-0">
+                    <thead class="table-dark">
+                        <tr>
+                            <th style="min-width: 120px;">Күн</th>
+                            <th style="min-width: 120px;">Убакыт</th>
+                            <th>Предмет</th>
+                            <th>Группа</th>
+                            <th>Бөлмө</th>
+                            <th style="min-width: 120px;">Иш-аракеттер</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for schedule in schedules %}
+                            <tr>
+                                <td class="fw-bold">
+                                    {% if schedule.day == 'Monday' %}Дүйшөмбү
+                                    {% elif schedule.day == 'Tuesday' %}Шейшемби
+                                    {% elif schedule.day == 'Wednesday' %}Шаршемби
+                                    {% elif schedule.day == 'Thursday' %}Бейшемби
+                                    {% elif schedule.day == 'Friday' %}Жума
+                                    {% elif schedule.day == 'Saturday' %}Ишемби
+                                    {% else %}{{ schedule.day }}
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <span class="badge bg-info">
+                                        {{ schedule.start_time|time:"H:i" }} - {{ schedule.end_time|time:"H:i" }}
+                                    </span>
+                                </td>
+                                <td>
+                                    <div class="fw-bold text-primary">{{ schedule.subject.subject_name }}</div>
+                                </td>
+                                <td>
+                                    <div class="badge bg-secondary">{{ schedule.group.name }}</div>
+                                    <small class="text-muted d-block">{{ schedule.group.course.name }}</small>
+                                </td>
+                                <td>
+                                    {% if schedule.room %}
+                                        <i class="fas fa-door-open me-1"></i>{{ schedule.room }}
+                                    {% else %}
+                                        <span class="text-muted">Белгисиз</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <a href="{% url 'mark_group_attendance' schedule.id %}" 
+                                       class="btn btn-success btn-sm">
+                                        <i class="fas fa-check me-1"></i>Жоктоо
+                                    </a>
+                                </td>
+                            </tr>
+                        {% empty %}
+                            <tr>
+                                <td colspan="6" class="text-center text-muted py-4">
+                                    <i class="fas fa-calendar-times fa-2x mb-2 d-block"></i>
+                                    Сизге берилген сабактар табылган жок
+                                </td>
+                            </tr>
                         {% endfor %}
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for period in periods %}
-                    <tr>
-                        <td>{{ forloop.counter }}</td>
-                        <td>{{ period.start_time|time:"H:i" }} - {{ period.end_time|time:"H:i" }}</td>
-                        {% for group in course.group_set.all %}
-                        <td>
-                            {% with schedule=schedules|filter_schedule:group.id|add:','|add:forloop.counter %}
-                            {% if schedule %}
-                            {{ schedule.subject.subject_name|default:"" }}<br>
-                            {{ schedule.subject.teacher.name|default:"" }}<br>
-                            {{ schedule.room|default:"Кабинет жок" }}<br>
-                            <!-- Студенттердин катышуусу -->
-                            {% for student in group.student_set.all %}
-                            <div class="student-attendance">
-                                <label>{{ student.name }}</label>
-                                <select name="status_{{ schedule.id }}_{{ student.id }}">
-                                    <option value="">Статус</option>
-                                    <option value="Present">Келди</option>
-                                    <option value="Absent">Келген жок</option>
-                                    <option value="Late">Кечикти</option>
-                                </select>
-                            </div>
-                            {% endfor %}
-                            {% else %}
-                            Жок
-                            {% endif %}
-                            {% endwith %}
-                        </td>
-                        {% endfor %}
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-            <button type="submit" class="submit-btn">Катышууну сактоо</button>
-        </form>
+                    </tbody>
+                </table>
+            </div>
+        </div>
     </div>
-    {% endfor %}
+
+    <!-- Маалымат -->
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="alert alert-info">
+                <h6><i class="fas fa-info-circle me-2"></i>Көрсөтмөлөр:</h6>
+                <ul class="mb-0">
+                    <li><strong>Жоктоо:</strong> Сабакка катышкан студенттерди белгилөө үчүн</li>
+                    <li><strong>Убакыт:</strong> Так сабак убактысы</li>
+                    <li><strong>Группа:</strong> Сабакка катышуучу студенттер</li>
+                </ul>
+            </div>
+        </div>
+    </div>
 </div>
-
-<script>
-function showCourseTable(courseId) {
-    document.querySelectorAll('.course-table').forEach(table => table.style.display = 'none');
-    document.getElementById(`course-${courseId}`).style.display = 'block';
-    document.querySelectorAll('.course-btn').forEach(btn => btn.classList.remove('active-course-btn'));
-    event.target.classList.add('active-course-btn');
-}
-</script>
 {% endblock %}

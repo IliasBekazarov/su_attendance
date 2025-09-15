@@ -30,8 +30,11 @@ def create_student_or_teacher(sender, instance, created, **kwargs):
 def create_absent_notification(sender, instance, created, **kwargs):
     if created and instance.status == 'Absent':
         teacher = instance.subject.teacher
-        Notification.objects.create(
-            teacher=teacher,
-            student=instance.student,
-            message=f"{instance.student.name} {instance.subject.subject_name} сабагына катышкан жок ({instance.date})."
-        )
+        if teacher and teacher.user:
+            Notification.objects.create(
+                recipient=teacher.user,
+                notification_type='ABSENCE',
+                title='Студент катышкан жок',
+                message=f"{instance.student.name} {instance.subject.subject_name} сабагына катышкан жок ({instance.date}).",
+                student=instance.student
+            )
