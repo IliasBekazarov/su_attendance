@@ -1,0 +1,427 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Профилди өзгөртүү{% endblock %}
+
+{% block extra_css %}
+<style>
+.edit-card {
+    border: none;
+    border-radius: 15px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+}
+
+.card-header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border-radius: 15px 15px 0 0 !important;
+}
+
+.form-section {
+    background: #f8f9fa;
+    border-radius: 10px;
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+}
+
+.form-section h5 {
+    color: #495057;
+    margin-bottom: 1rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 2px solid #e9ecef;
+}
+
+.photo-preview {
+    max-width: 150px;
+    max-height: 150px;
+    border-radius: 10px;
+    object-fit: cover;
+    border: 3px solid #e9ecef;
+}
+
+.photo-placeholder {
+    width: 150px;
+    height: 150px;
+    border-radius: 10px;
+    background: #e9ecef;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #6c757d;
+    font-size: 2rem;
+    border: 3px dashed #dee2e6;
+}
+
+.btn-save {
+    background: linear-gradient(135deg, #28a745, #20c997);
+    border: none;
+    border-radius: 25px;
+    padding: 0.75rem 2rem;
+    font-weight: 600;
+    color: white;
+    transition: all 0.3s ease;
+}
+
+.btn-save:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(40, 167, 69, 0.3);
+    color: white;
+}
+
+.btn-cancel {
+    background: #6c757d;
+    border: none;
+    border-radius: 25px;
+    padding: 0.75rem 2rem;
+    font-weight: 600;
+    color: white;
+}
+
+.btn-cancel:hover {
+    background: #5a6268;
+    color: white;
+}
+
+.btn-danger-outline {
+    border: 2px solid #dc3545;
+    background: transparent;
+    color: #dc3545;
+    border-radius: 20px;
+    padding: 0.5rem 1rem;
+    font-size: 0.9rem;
+    transition: all 0.3s ease;
+}
+
+.btn-danger-outline:hover {
+    background: #dc3545;
+    color: white;
+}
+
+.form-control:focus, .form-select:focus {
+    border-color: #667eea;
+    box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+}
+
+.help-text {
+    font-size: 0.875rem;
+    color: #6c757d;
+    margin-top: 0.25rem;
+}
+
+.required-field {
+    color: #dc3545;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-10">
+            <div class="card edit-card">
+                <div class="card-header text-center py-3">
+                    <h4 class="mb-0"><i class="fas fa-user-edit me-2"></i>Профилди өзгөртүү</h4>
+                </div>
+                
+                <div class="card-body p-4">
+                    <form method="post" enctype="multipart/form-data" id="profileForm">
+                        {% csrf_token %}
+                        
+                        <!-- Негизги маалыматтар -->
+                        <div class="form-section">
+                            <h5><i class="fas fa-user me-2"></i>Негизги маалыматтар</h5>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="{{ user_form.first_name.id_for_label }}" class="form-label">
+                                            {{ user_form.first_name.label }} <span class="required-field">*</span>
+                                        </label>
+                                        {{ user_form.first_name }}
+                                        {% if user_form.first_name.errors %}
+                                            <div class="text-danger mt-1">
+                                                {% for error in user_form.first_name.errors %}
+                                                    <small>{{ error }}</small>
+                                                {% endfor %}
+                                            </div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="{{ user_form.last_name.id_for_label }}" class="form-label">
+                                            {{ user_form.last_name.label }} <span class="required-field">*</span>
+                                        </label>
+                                        {{ user_form.last_name }}
+                                        {% if user_form.last_name.errors %}
+                                            <div class="text-danger mt-1">
+                                                {% for error in user_form.last_name.errors %}
+                                                    <small>{{ error }}</small>
+                                                {% endfor %}
+                                            </div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="{{ user_form.email.id_for_label }}" class="form-label">
+                                            {{ user_form.email.label }} <span class="required-field">*</span>
+                                        </label>
+                                        {{ user_form.email }}
+                                        {% if user_form.email.errors %}
+                                            <div class="text-danger mt-1">
+                                                {% for error in user_form.email.errors %}
+                                                    <small>{{ error }}</small>
+                                                {% endfor %}
+                                            </div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="{{ profile_form.phone_number.id_for_label }}" class="form-label">
+                                            {{ profile_form.phone_number.label }} <span class="required-field">*</span>
+                                        </label>
+                                        {{ profile_form.phone_number }}
+                                        <div class="help-text">Мисалы: +996700123456</div>
+                                        {% if profile_form.phone_number.errors %}
+                                            <div class="text-danger mt-1">
+                                                {% for error in profile_form.phone_number.errors %}
+                                                    <small>{{ error }}</small>
+                                                {% endfor %}
+                                            </div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Профил сүрөтү -->
+                        <div class="form-section">
+                            <h5><i class="fas fa-camera me-2"></i>Профил сүрөтү</h5>
+                            <div class="row align-items-center">
+                                <div class="col-md-3">
+                                    {% if profile.profile_photo %}
+                                        <img src="{{ profile.profile_photo.url }}" alt="Current Photo" class="photo-preview" id="photoPreview">
+                                    {% else %}
+                                        <div class="photo-placeholder" id="photoPlaceholder">
+                                            <i class="fas fa-camera"></i>
+                                        </div>
+                                    {% endif %}
+                                </div>
+                                <div class="col-md-9">
+                                    <div class="mb-3">
+                                        <label for="{{ profile_form.profile_photo.id_for_label }}" class="form-label">
+                                            {{ profile_form.profile_photo.label }}
+                                        </label>
+                                        {{ profile_form.profile_photo }}
+                                        <div class="help-text">PNG, JPG форматтары. Максимум 5MB.</div>
+                                        {% if profile_form.profile_photo.errors %}
+                                            <div class="text-danger mt-1">
+                                                {% for error in profile_form.profile_photo.errors %}
+                                                    <small>{{ error }}</small>
+                                                {% endfor %}
+                                            </div>
+                                        {% endif %}
+                                    </div>
+                                    {% if profile.profile_photo %}
+                                        <button type="button" class="btn btn-danger-outline btn-sm" onclick="deletePhoto()">
+                                            <i class="fas fa-trash me-1"></i>Сүрөттү өчүрүү
+                                        </button>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Жеке маалыматтар -->
+                        <div class="form-section">
+                            <h5><i class="fas fa-info-circle me-2"></i>Жеке маалыматтар</h5>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="{{ profile_form.birth_date.id_for_label }}" class="form-label">
+                                            {{ profile_form.birth_date.label }}
+                                        </label>
+                                        {{ profile_form.birth_date }}
+                                        {% if profile_form.birth_date.errors %}
+                                            <div class="text-danger mt-1">
+                                                {% for error in profile_form.birth_date.errors %}
+                                                    <small>{{ error }}</small>
+                                                {% endfor %}
+                                            </div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="{{ profile_form.gender.id_for_label }}" class="form-label">
+                                            {{ profile_form.gender.label }}
+                                        </label>
+                                        {{ profile_form.gender }}
+                                        {% if profile_form.gender.errors %}
+                                            <div class="text-danger mt-1">
+                                                {% for error in profile_form.gender.errors %}
+                                                    <small>{{ error }}</small>
+                                                {% endfor %}
+                                            </div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="mb-3">
+                                <label for="{{ profile_form.address.id_for_label }}" class="form-label">
+                                    {{ profile_form.address.label }}
+                                </label>
+                                {{ profile_form.address }}
+                                {% if profile_form.address.errors %}
+                                    <div class="text-danger mt-1">
+                                        {% for error in profile_form.address.errors %}
+                                            <small>{{ error }}</small>
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                            <div class="mb-3">
+                                <label for="{{ profile_form.bio.id_for_label }}" class="form-label">
+                                    {{ profile_form.bio.label }}
+                                </label>
+                                {{ profile_form.bio }}
+                                <div class="help-text">{{ profile_form.bio.help_text }}</div>
+                                {% if profile_form.bio.errors %}
+                                    <div class="text-danger mt-1">
+                                        {% for error in profile_form.bio.errors %}
+                                            <small>{{ error }}</small>
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <!-- Тез кырдаал байланыштары -->
+                        <div class="form-section">
+                            <h5><i class="fas fa-exclamation-triangle me-2"></i>Тез кырдаал байланыштары</h5>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="{{ profile_form.emergency_contact_name.id_for_label }}" class="form-label">
+                                            {{ profile_form.emergency_contact_name.label }}
+                                        </label>
+                                        {{ profile_form.emergency_contact_name }}
+                                        {% if profile_form.emergency_contact_name.errors %}
+                                            <div class="text-danger mt-1">
+                                                {% for error in profile_form.emergency_contact_name.errors %}
+                                                    <small>{{ error }}</small>
+                                                {% endfor %}
+                                            </div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="{{ profile_form.emergency_contact_phone.id_for_label }}" class="form-label">
+                                            {{ profile_form.emergency_contact_phone.label }}
+                                        </label>
+                                        {{ profile_form.emergency_contact_phone }}
+                                        <div class="help-text">Мисалы: +996700123456</div>
+                                        {% if profile_form.emergency_contact_phone.errors %}
+                                            <div class="text-danger mt-1">
+                                                {% for error in profile_form.emergency_contact_phone.errors %}
+                                                    <small>{{ error }}</small>
+                                                {% endfor %}
+                                            </div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Action buttons -->
+                        <div class="text-center">
+                            <button type="submit" class="btn btn-save me-3">
+                                <i class="fas fa-save me-2"></i>Сактоо
+                            </button>
+                            <a href="{% url 'profile_view' %}" class="btn btn-cancel">
+                                <i class="fas fa-times me-2"></i>Жокко чыгаруу
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Photo delete modal -->
+<div class="modal fade" id="deletePhotoModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Сүрөттү өчүрүү</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                Профил сүрөтүңүздү чын эле өчүргүңүз келеби?
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Жокко чыгаруу</button>
+                <form method="post" action="{% url 'profile_photo_delete' %}" style="display: inline;">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-danger">Өчүрүү</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Photo preview
+$(document).ready(function() {
+    $('#{{ profile_form.profile_photo.id_for_label }}').change(function(e) {
+        const file = e.target.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const preview = $('#photoPreview');
+                const placeholder = $('#photoPlaceholder');
+                
+                if (preview.length > 0) {
+                    preview.attr('src', e.target.result);
+                } else {
+                    placeholder.replaceWith('<img src="' + e.target.result + '" alt="Preview" class="photo-preview" id="photoPreview">');
+                }
+            };
+            reader.readAsDataURL(file);
+        }
+    });
+});
+
+function deletePhoto() {
+    $('#deletePhotoModal').modal('show');
+}
+
+// Form validation
+$('#profileForm').submit(function(e) {
+    let isValid = true;
+    const requiredFields = ['{{ user_form.first_name.id_for_label }}', '{{ user_form.last_name.id_for_label }}', '{{ user_form.email.id_for_label }}'];
+    
+    requiredFields.forEach(function(fieldId) {
+        const field = $('#' + fieldId);
+        if (!field.val().trim()) {
+            isValid = false;
+            field.addClass('is-invalid');
+        } else {
+            field.removeClass('is-invalid');
+        }
+    });
+    
+    if (!isValid) {
+        e.preventDefault();
+        alert('Керектүү талааларды толтуруңуз!');
+        return false;
+    }
+});
+</script>
+{% endblock %}

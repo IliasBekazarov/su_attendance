@@ -1,5 +1,6 @@
 from pathlib import Path
 import os
+from .site_config import *  # Site configuration импорту
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -27,6 +28,7 @@ CRISPY_TEMPLATE_PACK = 'bootstrap4'
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
+    'django.middleware.locale.LocaleMiddleware',  # Added for i18n
     'django.middleware.common.CommonMiddleware',
     # 'django.middleware.csrf.CsrfViewMiddleware',  # CSRF middleware биротоло өчүрүлдү
     'django.contrib.auth.middleware.AuthenticationMiddleware',
@@ -47,6 +49,8 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+                'django.template.context_processors.i18n',  # Added for i18n
+                'attendance_system.context_processors.site_config',  # Site config context processor
             ],
         },
     },
@@ -71,11 +75,26 @@ EMAIL_USE_TLS = True
 EMAIL_HOST_USER = 'your_email@gmail.com'
 EMAIL_HOST_PASSWORD = 'your_password'
 
-LANGUAGE_CODE = 'en-us'
+# Internationalization
+# https://docs.djangoproject.com/en/4.2/topics/i18n/
+
+LANGUAGE_CODE = 'ky'  # Default to Kyrgyz
+
+LANGUAGES = [
+    ('ky', 'Кыргызча'),
+    ('ru', 'Русский'),
+    ('en', 'English'),
+]
+
+LOCALE_PATHS = [
+    BASE_DIR / 'locale',
+]
 
 TIME_ZONE = 'Asia/Bishkek'  # Кыргызстандын убакыт зонасы
 
 USE_I18N = True
+
+USE_L10N = True
 
 USE_TZ = True
 
@@ -130,6 +149,19 @@ CSRF_TRUSTED_ORIGINS = ['http://127.0.0.1:8000', 'http://localhost:8000']
 # Session Security 
 SESSION_COOKIE_SECURE = False  # Development үчүн False, production деген True болушу керек
 SESSION_COOKIE_HTTPONLY = True
+
+# ============= MEDIA ЖАНА STATIC ФАЙЛДАР =============
+
+STATIC_URL = '/static/'
+STATIC_ROOT = BASE_DIR / 'staticfiles'
+
+STATICFILES_DIRS = [
+    BASE_DIR / 'static',
+]
+
+# Media files (жүктөлгөн файлдар)
+MEDIA_URL = '/media/'
+MEDIA_ROOT = BASE_DIR / 'media'
 
 # ============= REST FRAMEWORK НАСТРОЙКАЛАРЫ =============
 

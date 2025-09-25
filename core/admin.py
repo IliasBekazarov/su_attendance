@@ -35,9 +35,44 @@ class SubjectAdmin(admin.ModelAdmin):
 
 @admin.register(Schedule)
 class ScheduleAdmin(admin.ModelAdmin):
-    list_display = ['subject', 'group', 'day', 'start_time', 'end_time', 'teacher', 'room']
-    list_filter = ['day', 'group', 'teacher']
-    search_fields = ['subject__subject_name', 'group__name', 'teacher__name', 'room']
+    list_display = ['get_subject_name', 'get_teacher_name', 'group', 'day', 'start_time', 'end_time', 'room', 'get_student_count']
+    list_filter = ['day', 'subject__teacher', 'group__course', 'start_time']
+    search_fields = ['subject__subject_name', 'group__name', 'subject__teacher__name', 'room']
+    list_per_page = 20
+    ordering = ['day', 'start_time', 'group__name']
+    
+    # Бардык fields кө рсөтүү form да
+    fieldsets = (
+        ('Негизги маалыматтар', {
+            'fields': ('subject', 'group', 'day', 'room')
+        }),
+        ('Убакыт маалыматтары', {
+            'fields': ('start_time', 'end_time'),
+            'classes': ('wide',)
+        }),
+    )
+    
+    def get_subject_name(self, obj):
+        return obj.subject.subject_name
+    get_subject_name.short_description = 'Сабак'
+    get_subject_name.admin_order_field = 'subject__subject_name'
+    
+    def get_teacher_name(self, obj):
+        return obj.subject.teacher.name if obj.subject.teacher else 'Мугалим жок'
+    get_teacher_name.short_description = 'Мугалим'
+    get_teacher_name.admin_order_field = 'subject__teacher__name'
+    
+    def get_student_count(self, obj):
+        return obj.group.student_set.count()
+    get_student_count.short_description = 'Студенттер саны'
+    
+    # Фильтрлерди кошуу
+    def changelist_view(self, request, extra_context=None):
+        extra_context = extra_context or {}
+        extra_context.update({
+            'title': 'Расписание башкаруу - Салымбеков Университети'
+        })
+        return super().changelist_view(request, extra_context)
 
 @admin.register(Attendance)
 class AttendanceAdmin(admin.ModelAdmin):

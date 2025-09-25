@@ -10,12 +10,66 @@ class UserProfile(models.Model):
         ('STUDENT', 'Студент'),
         ('PARENT', 'Ата-энелер'),
     )
+    
+    GENDER_CHOICES = (
+        ('M', 'Эркек'),
+        ('F', 'Аял'),
+        ('O', 'Башка'),
+    )
+    
     user = models.OneToOneField(User, on_delete=models.CASCADE)
     role = models.CharField(max_length=20, choices=ROLE_CHOICES, default='STUDENT')
     students = models.ManyToManyField('Student', blank=True, related_name='student_profiles')
+    
+    # Жеке маалыматтар
+    profile_photo = models.ImageField(upload_to='profile_photos/', blank=True, null=True, verbose_name='Профил сүрөтү')
+    phone_number = models.CharField(max_length=20, blank=True, null=True, verbose_name='Телефон номери')
+    birth_date = models.DateField(blank=True, null=True, verbose_name='Туулган күнү')
+    gender = models.CharField(max_length=1, choices=GENDER_CHOICES, blank=True, null=True, verbose_name='Жынысы')
+    address = models.TextField(blank=True, null=True, verbose_name='Дареги')
+    bio = models.TextField(blank=True, null=True, verbose_name='Өзү жөнүндө', help_text='Кыскача маалымат')
+    
+    # Байланыш маалыматтары
+    emergency_contact_name = models.CharField(max_length=100, blank=True, null=True, verbose_name='Тез кырдаал учурундагы байланышуучу')
+    emergency_contact_phone = models.CharField(max_length=20, blank=True, null=True, verbose_name='Тез кырдаал телефону')
+    
+    # Система маалыматтары
+    created_at = models.DateTimeField(auto_now_add=True, null=True, blank=True)
+    updated_at = models.DateTimeField(auto_now=True, null=True, blank=True)
+    is_profile_complete = models.BooleanField(default=False, verbose_name='Профил толтурулганбы')
 
     def __str__(self):
         return self.user.username
+    
+    @property
+    def full_name(self):
+        """Толук аты"""
+        return f"{self.user.first_name} {self.user.last_name}".strip() or self.user.username
+    
+    @property
+    def age(self):
+        """Курагы"""
+        if self.birth_date:
+            from datetime import date
+            today = date.today()
+            return today.year - self.birth_date.year - ((today.month, today.day) < (self.birth_date.month, self.birth_date.day))
+        return None
+    
+    def check_profile_completeness(self):
+        """Профилдин толук экенин текшерүү"""
+        required_fields = [
+            self.user.first_name,
+            self.user.last_name,
+            self.user.email,
+            self.phone_number,
+        ]
+        self.is_profile_complete = all(field for field in required_fields)
+        self.save()
+        return self.is_profile_complete
+    
+    class Meta:
+        verbose_name = 'Колдонуучу профили'
+        verbose_name_plural = 'Колдонуучулардын профилдери'
 
 class Student(models.Model):
     name = models.CharField(max_length=100)
@@ -164,6 +218,8 @@ class Attendance(models.Model):
     date = models.DateField()
     status = models.CharField(max_length=10, choices=STATUS_CHOICES)
     created_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True)
+    marked_by_student = models.BooleanField(default=False, verbose_name='Студент тарабынан белгиленди')
+    marked_at = models.DateTimeField(auto_now=True, verbose_name='Белгиленген убакыт')
     leave_request = models.ForeignKey(LeaveRequest, on_delete=models.SET_NULL, null=True, blank=True, 
                                      verbose_name='Байланышкан бошотуу сурамы')
 

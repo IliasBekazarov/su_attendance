@@ -6,6 +6,7 @@ urlpatterns = [
     path('login/', views.user_login, name='login'),
     path('register/', views.register, name='register'),
     path('dashboard/', views.dashboard, name='dashboard'),
+    path('settings/', views.settings, name='settings'),
     path('schedule/', views.schedule, name='schedule'),
     path('report/', views.report, name='report'),
     path('export/pdf/', views.export_pdf, name='export_pdf'),
@@ -46,4 +47,14 @@ urlpatterns = [
     
     # Универсалдуу расписание
     path('universal-schedule/', views.universal_schedule, name='universal_schedule'),
+    
+    # Студенттик катышуу белгилөө
+    path('student/attendance/mark/<int:schedule_id>/', views.mark_student_attendance, name='mark_student_attendance'),
+    
+    # ПРОФИЛ БАШКАРУУ
+    path('profile/', views.profile_view, name='profile_view'),
+    path('profile/edit/', views.profile_edit, name='profile_edit'),
+    path('profile/change-password/', views.change_password, name='change_password'),
+    path('profile/photo/delete/', views.profile_photo_delete, name='profile_photo_delete'),
+    path('profile/completion-check/', views.profile_completion_check, name='profile_completion_check'),
 ]   

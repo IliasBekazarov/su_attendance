@@ -6,8 +6,9 @@ from django.contrib.auth.forms import UserCreationForm
 from django.db.models import Q, Count
 from django.contrib import messages
 from django.contrib.auth.models import User
+from django.utils.translation import gettext as _
 from .models import UserProfile, Student, Teacher, Course, Group, Attendance, Notification, Subject, Schedule, LeaveRequest
-from .forms import StudentRegistrationForm, NotificationForm, LeaveRequestForm
+from .forms import StudentRegistrationForm, NotificationForm, LeaveRequestForm, UserProfileForm, UserUpdateForm, PasswordChangeCustomForm
 from reportlab.pdfgen import canvas
 from openpyxl import Workbook
 from datetime import datetime, date, timedelta
@@ -237,8 +238,8 @@ def register(request):
                 parent = User.objects.get(username=parent_username)
                 student.parents.add(parent.userprofile)
                 parent.userprofile.students.add(student)
-                messages.success(request, 'Ата-эне байланыштырылды!')
-            messages.success(request, 'Студент катталды!')
+                messages.success(request, _('Parent linked successfully!'))
+            messages.success(request, _('Student registered successfully!'))
             login(request, user)
             return redirect('dashboard')
         else:
@@ -266,13 +267,57 @@ def user_login(request):
             login(request, user)
             return redirect('dashboard')
         else:
-            messages.error(request, 'Кирүү катасы!')
+            messages.error(request, _('Login error!'))
     return render(request, 'login.html')
 
 def user_logout(request):
     auth_logout(request)
-    messages.success(request, 'Сиз чыктыңыз!')
+    messages.success(request, _('You have been logged out!'))
     return redirect('login')
+
+@login_required
+def settings(request):
+    """
+    User settings бети - тил жана тема тандоо
+    """
+    from django.conf import settings as django_settings
+    
+    if request.method == 'POST':
+        # Тилди өзгөртүү
+        if 'language' in request.POST:
+            language = request.POST.get('language')
+            if language in [lang[0] for lang in django_settings.LANGUAGES]:
+                from django.utils import translation
+                translation.activate(language)
+                request.session['django_language'] = language
+                messages.success(request, _('Language updated successfully!'))
+        
+        # Теманы өзгөртүү (JavaScript аркылуу иштейт)
+        if 'theme' in request.POST:
+            theme = request.POST.get('theme')
+            if theme in ['light', 'dark']:
+                messages.success(request, _('Theme preference saved!'))
+        
+        # Башка настройкалар
+        if 'notifications' in request.POST:
+            notifications_enabled = request.POST.get('notifications') == 'on'
+            # Notifications настройкаларын сактоо логикасын бул жерге кошсо болот
+            messages.success(request, _('Notification settings updated!'))
+        
+        return redirect('settings')
+    
+    # Жеткиликтүү тилдер
+    available_languages = getattr(django_settings, 'LANGUAGES', [])
+    current_language = request.session.get('django_language', django_settings.LANGUAGE_CODE)
+    
+    context = {
+        'available_languages': available_languages,
+        'current_language': current_language,
+        'user': request.user,
+        'user_profile': getattr(request.user, 'userprofile', None),
+    }
+    
+    return render(request, 'settings.html', context)
 
 @login_required
 @login_required
@@ -285,7 +330,7 @@ def dashboard(request):
     try:
         profile, created = UserProfile.objects.get_or_create(user=request.user, defaults={'role': 'STUDENT'})
         if created:
-            messages.info(request, 'Профилиңиз автоматтык түрдө түзүлдү (STUDENT ролу).')
+            messages.info(request, _('Your profile has been automatically created (STUDENT role).'))
         role = profile.role
         print(f"User role: {role}")
     except Exception as e:
@@ -366,7 +411,7 @@ def dashboard(request):
             })
             
         except Teacher.DoesNotExist:
-            messages.error(request, 'Мугалим профили табылган жок. Администраторго кайрылыңыз.')
+            messages.error(request, _('Teacher profile not found. Please contact administrator.'))
             
     elif role == 'STUDENT':
         # Студент профилин алуу же түзүү
@@ -465,7 +510,7 @@ def dashboard(request):
                 'end_date': end_date
             })
         else:
-            messages.error(request, 'Балаңыздын профили байланыштырылган эмес. Администраторго кайрылыңыз.')
+            messages.error(request, _('Your child profile is not linked. Please contact administrator.'))
             context.update({'message': 'Баланын маалыматы жок'})
 
     print(f"Dashboard context keys: {list(context.keys())}")
@@ -492,7 +537,7 @@ def dashboard(request):
 @login_required
 def send_notification(request):
     if request.user.userprofile.role != 'TEACHER':
-        messages.error(request, 'Бул функция мугалимдер үчүн гана.')
+        messages.error(request, _('This function is for teachers only.'))
         return redirect('dashboard')
     
     teacher = Teacher.objects.get(user=request.user)
@@ -502,7 +547,7 @@ def send_notification(request):
             notification = form.save(commit=False)
             notification.teacher = teacher
             notification.save()
-            messages.success(request, 'Билдирүү жөнөтүлдү!')
+            messages.success(request, _('Notification sent!'))
             return redirect('dashboard')
     else:
         form = NotificationForm()
@@ -511,13 +556,13 @@ def send_notification(request):
 @login_required
 def mark_notification_read(request, notification_id):
     if request.user.userprofile.role != 'PARENT':
-        messages.error(request, 'Бул функция ата-энелер үчүн гана.')
+        messages.error(request, _('This function is for parents only.'))
         return redirect('dashboard')
     notification = Notification.objects.get(id=notification_id)
     if notification.student in request.user.userprofile.students.all():
         notification.is_read = True
         notification.save()
-        messages.success(request, 'Билдирүү окулду деп белгиленди.')
+        messages.success(request, _('Notification marked as read.'))
     return redirect('dashboard')
 
 from django.contrib.auth.decorators import login_required
@@ -548,7 +593,7 @@ def schedule_edit(request):
     
     # Уруксат текшерүү - жөн гана көрүү үчүн
     if profile.role not in ['MANAGER', 'ADMIN']:
-        messages.error(request, 'Бул функция менеджер жана админдер үчүн гана.')
+        messages.error(request, _('This function is for managers and administrators only.'))
         return redirect('dashboard')
 
     schedules = Schedule.objects.all()  # Бардык расписаниелер
@@ -622,14 +667,121 @@ def schedule_update(request):
 
 @login_required
 def student_schedule(request):
+    """Студенттин жумалык расписаниеси жана катышуу статистикасы"""
     if request.user.userprofile.role != 'STUDENT':
-        messages.error(request, 'Бул функция студенттер үчүн гана.')
+        messages.error(request, _('This function is for students only.'))
         return redirect('dashboard')
     
-    student = Student.objects.get(user=request.user)
-    schedules = Schedule.objects.filter(group=student.group)
-    context = {'schedules': schedules}
-    return render(request, 'student_schedule.html', context)
+    try:
+        student = Student.objects.get(user=request.user)
+        
+        # Жумалык расписание үчүн күндөр
+        days = [
+            ('Monday', 'Дүйшөмбү'),
+            ('Tuesday', 'Шейшемби'), 
+            ('Wednesday', 'Шаршемби'),
+            ('Thursday', 'Бейшемби'),
+            ('Friday', 'Жума'),
+            ('Saturday', 'Ишемби'),
+        ]
+        
+        # Убакыт слоттору
+        time_slots = [
+            ('08:00', '09:30', '1-пара'),
+            ('09:45', '11:15', '2-пара'),
+            ('11:30', '13:00', '3-пара'),
+            ('14:00', '15:30', '4-пара'),
+            ('15:45', '17:15', '5-пара'),
+            ('17:30', '19:00', '6-пара'),
+        ]
+        
+        # Студенттин группасынын расписаниеси
+        schedules = Schedule.objects.filter(group=student.group).order_by('day', 'start_time')
+        
+        # Расписание матрицасын түзүү
+        schedule_matrix = {}
+        
+        # Ушул аптанын башы жана аягы (Дүйшөмбүдөн Жекшембиге)
+        from datetime import date, timedelta
+        today = date.today()
+        # Дүйшөмбүнү табуу (weekday: 0=Дүйшөмбү, 6=Жекшемби)
+        days_since_monday = today.weekday()
+        start_date = today - timedelta(days=days_since_monday)
+        end_date = start_date + timedelta(days=6)  # Жекшемби
+        
+        for day_code, day_name in days:
+            schedule_matrix[day_code] = {}
+            for start_time, end_time, period_name in time_slots:
+                # Бул күн жана убакыт үчүн сабактарды табуу
+                from datetime import datetime
+                start_dt = datetime.strptime(start_time, '%H:%M').time()
+                end_dt = datetime.strptime(end_time, '%H:%M').time()
+                
+                day_schedule = schedules.filter(
+                    day=day_code,
+                    start_time__lte=end_dt,
+                    end_time__gte=start_dt
+                ).first()
+                
+                schedule_info = None
+                if day_schedule:
+                    # Бул сабак үчүн ушул аптанын эң соңку катышуу статусун алуу
+                    last_attendance = Attendance.objects.filter(
+                        student=student,
+                        subject=day_schedule.subject,
+                        date__range=[start_date, end_date]
+                    ).order_by('-date').first()
+                    
+                    # Соңку статусту аныктоо
+                    if last_attendance:
+                        if last_attendance.status == 'Present':
+                            last_status = 'Катышкан'
+                            status_class = 'success'
+                        elif last_attendance.status == 'Absent':
+                            last_status = 'Катышпаган'
+                            status_class = 'danger'
+                        elif last_attendance.status == 'Late':
+                            last_status = 'Кечиккен'
+                            status_class = 'warning'
+                        else:
+                            last_status = 'Катышкан'
+                            status_class = 'success'
+                    else:
+                        last_status = 'Белгилене элек'
+                        status_class = 'secondary'
+                    
+                    schedule_info = {
+                        'schedule': day_schedule,
+                        'last_status': last_status,
+                        'status_class': status_class
+                    }
+                
+                schedule_matrix[day_code][period_name] = {
+                    'time_range': f"{start_time} - {end_time}",
+                    'schedule_info': schedule_info
+                }
+        
+        # Бүгүнкү расписание үчүн schedules алуу
+        today_schedules = Schedule.objects.filter(
+            group=student.group,
+            day=today.strftime('%A')  # Monday, Tuesday, etc.
+        ).order_by('start_time')
+        
+        context = {
+            'student': student,
+            'schedules': today_schedules,
+            'days': days,
+            'time_slots': time_slots,
+            'schedule_matrix': schedule_matrix,
+            'start_date': start_date,
+            'end_date': end_date,
+        }
+        
+        return render(request, 'modern_student_schedule.html', context)
+        
+    except Student.DoesNotExist:
+        messages.error(request, _('Student information not found!'))
+        return redirect('dashboard')
 
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
@@ -641,24 +793,43 @@ from datetime import date
 def teacher_schedule(request):
     """Мугалимдин расписаниесин көрүү жана жоктоо белгилөө"""
     if request.user.userprofile.role != 'TEACHER':
-        messages.error(request, 'Бул функция мугалимдер үчүн гана.')
+        messages.error(request, _('This function is for teachers only.'))
         return redirect('dashboard')
     
     try:
         teacher = Teacher.objects.get(user=request.user)
     except Teacher.DoesNotExist:
-        messages.error(request, 'Сиз мугалим катары катталган эмессиз.')
+        messages.error(request, _('You are not registered as a teacher.'))
         return redirect('dashboard')
 
-    # Мугалимдин сабактары гана чыгарылат
+    # Фильтрлер
+    day_filter = request.GET.get('day_filter', '')
+    group_filter = request.GET.get('group_filter', '')
+    subject_filter = request.GET.get('subject_filter', '')
+
+    # Мугалимдин сабактары
     schedules = Schedule.objects.filter(
         subject__teacher=teacher
     ).select_related('subject', 'group', 'group__course').order_by('day', 'start_time')
     
-    # Курстарды алуу
-    courses = Course.objects.filter(
-        group__schedule__subject__teacher=teacher
-    ).distinct().order_by('year')
+    # Бүгүнкү сабактар үчүн фильтр
+    today = date.today()
+    today_schedules = schedules.filter(day=today.strftime('%A'))
+
+    # Фильтрлерди колдонуу
+    if day_filter:
+        today_schedules = today_schedules.filter(day=day_filter)
+    if group_filter:
+        today_schedules = today_schedules.filter(group_id=group_filter)
+    if subject_filter:
+        today_schedules = today_schedules.filter(subject_id=subject_filter)
+
+    # Статистика үчүн маалыматтар
+    total_lessons = schedules.count()
+    available_groups = Group.objects.filter(schedule__subject__teacher=teacher).distinct()
+    available_subjects = teacher.subjects.all()
+    total_groups = available_groups.count()
+    total_subjects = available_subjects.count()
 
     # Күндөр тизмеси
     days = [
@@ -672,23 +843,30 @@ def teacher_schedule(request):
 
     context = {
         'teacher': teacher,
-        'schedules': schedules,
-        'courses': courses,
+        'schedules': today_schedules,
+        'total_lessons': total_lessons,
+        'total_groups': total_groups,
+        'total_subjects': total_subjects,
+        'available_groups': available_groups,
+        'available_subjects': available_subjects,
         'days': days,
+        'day_filter': day_filter,
+        'group_filter': group_filter,
+        'subject_filter': subject_filter,
     }
-    return render(request, 'teacher_schedule.html', context)
+    return render(request, 'modern_teacher_schedule.html', context)
 
 @login_required
 def teacher_attendance(request):
     """Мугалим үчүн жеке жоктоо системасы"""
     if request.user.userprofile.role != 'TEACHER':
-        messages.error(request, 'Бул функция мугалимдер үчүн гана.')
+        messages.error(request, _('This function is for teachers only.'))
         return redirect('dashboard')
     
     try:
         teacher = Teacher.objects.get(user=request.user)
     except Teacher.DoesNotExist:
-        messages.error(request, 'Сиз мугалим катары катталган эмессиз.')
+        messages.error(request, _('You are not registered as a teacher.'))
         return redirect('dashboard')
 
     # POST request - жоктоо белгилөө
@@ -721,7 +899,7 @@ def teacher_attendance(request):
                         continue
             
             if saved_count > 0:
-                messages.success(request, f'{saved_count} студенттин катышуусу белгиленди.')
+                messages.success(request, _('Attendance marked for {} students.').format(saved_count))
             else:
                 messages.warning(request, 'Эч кандай маалымат сакталган жок.')
                 
@@ -753,7 +931,7 @@ def teacher_attendance(request):
 @login_required
 def mark_attendance(request, subject_id):
     if request.user.userprofile.role not in ['TEACHER', 'ADMIN', 'MANAGER']:
-        messages.error(request, 'Бул функция мугалимдер же администраторлор үчүн гана.')
+        messages.error(request, _('This function is for teachers or administrators only.'))
         return redirect('dashboard')
     
     subject = get_object_or_404(Subject, id=subject_id)
@@ -1525,116 +1703,99 @@ def manage_subjects(request):
 
 @login_required
 @login_required
+@login_required
 def universal_schedule(request):
-    """Универсалдуу расписание көрүү - бардык ролдор үчүн"""
-    profile = UserProfile.objects.get(user=request.user)
+    """Универсалдуу расписание көрүү - бардык ролдор үчүн (жаңыланган версия)"""
+    try:
+        profile = UserProfile.objects.get(user=request.user)
+    except UserProfile.DoesNotExist:
+        profile = UserProfile.objects.create(user=request.user, role='STUDENT')
     
-    # Күндөр тизмеси
-    days = [
+    # Бардык расписанияны алуу (негизги query)
+    schedules_query = Schedule.objects.select_related(
+        'subject__teacher',
+        'group__course'
+    ).prefetch_related(
+        'subject',
+        'group'
+    ).all()
+    
+    # Тартипке салуу - күн, убакыт, группа боюнча
+    schedules = schedules_query.order_by('day', 'start_time', 'group__name')    # Күндөр тизмеси тартипке салынган
+    days_choices = [
         ('Monday', 'Дүйшөмбү'),
-        ('Tuesday', 'Шейшемби'), 
-        ('Wednesday', 'Шаршемби'),
+        ('Tuesday', 'Шейшемби'),
+        ('Wednesday', 'Шаршемби'), 
         ('Thursday', 'Бейшемби'),
         ('Friday', 'Жума'),
         ('Saturday', 'Ишемби'),
-    ]
+        ('Sunday', 'Жекшемби')
+    ]    # Күн тартиби боюнча сортировка (1=Дүйшөмбү, 7=Жекшемби)
+    day_order = {
+        'Monday': 1,
+        'Tuesday': 2,
+        'Wednesday': 3,
+        'Thursday': 4,
+        'Friday': 5,
+        'Saturday': 6,
+        'Sunday': 7
+    }
     
-    # Убакыт периоддору
-    time_slots = [
-        ('08:00', '09:30', '1-пара'),
-        ('09:40', '11:10', '2-пара'),
-        ('11:30', '13:00', '3-пара'), 
-        ('14:00', '15:30', '4-пара'),
-        ('15:40', '17:10', '5-пара'),
-    ]
+    # Тартипке салуу - алгач күн, анан убакыт, анан группа
+    schedules = schedules_query.extra(
+        select={
+            'day_order': f"CASE day "
+                        f"WHEN 'Monday' THEN 1 "
+                        f"WHEN 'Tuesday' THEN 2 "
+                        f"WHEN 'Wednesday' THEN 3 "
+                        f"WHEN 'Thursday' THEN 4 "
+                        f"WHEN 'Friday' THEN 5 "
+                        f"WHEN 'Saturday' THEN 6 "
+                        f"WHEN 'Sunday' THEN 7 "
+                        f"END"
+        }
+    ).order_by('day_order', 'start_time', 'group__name')
     
-    # Бардык ролдор расписанияны көрө алат
-    schedules_query = Schedule.objects.select_related(
-        'subject__teacher', 
-        'group__course'
-    ).prefetch_related('group__student_set').all()
-    
-    # Филтрлер
-    course_filter = request.GET.get('course')
-    group_filter = request.GET.get('group')
-    teacher_filter = request.GET.get('teacher')
-    
-    if course_filter:
-        schedules_query = schedules_query.filter(group__course_id=course_filter)
-    if group_filter:
-        schedules_query = schedules_query.filter(group_id=group_filter)
-    if teacher_filter:
-        schedules_query = schedules_query.filter(subject__teacher_id=teacher_filter)
-    
-    # Роль боюнча кошумча фильтр
-    if profile.role == 'STUDENT':
-        try:
-            student = Student.objects.get(user=request.user)
-            # Студент өз группасын жана башка группаларды да көрө алат
-            if not course_filter and not group_filter:
-                # Эгер фильтр коюлбаса, өз группасын көрсөтүү
-                schedules_query = schedules_query.filter(group=student.group)
-        except Student.DoesNotExist:
-            pass
-    elif profile.role == 'TEACHER':
-        try:
-            teacher = Teacher.objects.get(user=request.user)
-            # Мугалим өз сабактарын жана башка сабактарды да көрө алат
-            if not course_filter and not group_filter and not teacher_filter:
-                # Эгер фильтр коюлбаса, өз сабактарын көрсөтүү
-                schedules_query = schedules_query.filter(subject__teacher=teacher)
-        except Teacher.DoesNotExist:
-            pass
-    
-    schedules = schedules_query.order_by('start_time')
-    
-    # Таблица үчүн маалыматтарды уюштуруу
-    schedule_matrix = {}
-    
-    for day_code, day_name in days:
-        schedule_matrix[day_code] = {}
-        for start_time, end_time, period_name in time_slots:
-            # Бул күн жана убакыт үчүн сабактарды табуу
-            from datetime import datetime
-            start_dt = datetime.strptime(start_time, '%H:%M').time()
-            end_dt = datetime.strptime(end_time, '%H:%M').time()
-            
-            day_schedules = schedules.filter(
-                day=day_code,
-                start_time__lte=end_dt,
-                end_time__gte=start_dt
-            )
-            
-            schedule_matrix[day_code][period_name] = {
-                'time_range': f"{start_time} - {end_time}",
-                'schedules': day_schedules
+    # Күн боюнча группалап чыгаруу
+    schedules_by_day = {}
+    for day_code, day_name in days_choices:
+        day_schedules = schedules.filter(day=day_code)
+        if day_schedules.exists():
+            schedules_by_day[day_code] = {
+                'name': day_name,
+                'schedules': day_schedules,
+                'count': day_schedules.count()
             }
-    
-    # Филтр үчүн маалыматтар
-    courses = Course.objects.all().order_by('year')
-    groups = Group.objects.select_related('course').all().order_by('course__year', 'name')
-    teachers = Teacher.objects.all().order_by('name')
     
     # Статистика
     total_schedules = schedules.count()
     unique_groups = schedules.values('group').distinct().count()
     unique_teachers = schedules.values('subject__teacher').distinct().count()
+    unique_subjects = schedules.values('subject').distinct().count()
+    
+    # Бүгүнкү расписание
+    from datetime import date
+    today = date.today()
+    today_day_name = today.strftime('%A')  # Monday, Tuesday, etc.
+    today_schedules = schedules.filter(day=today_day_name)
     
     context = {
-        'days': days,
-        'time_slots': time_slots,
-        'schedule_matrix': schedule_matrix,
-        'courses': courses,
-        'groups': groups,
-        'teachers': teachers,
-        'course_filter': course_filter,
-        'group_filter': group_filter,
-        'teacher_filter': teacher_filter,
-        'user_role': profile.role,
+        # Негизги маалыматтар (жаңы template үчүн)
+        'schedules': schedules,
+        'schedules_by_day': schedules_by_day,  # Күн боюнча группаланган
+        'today_schedules': today_schedules,
+        'today_day_name': today_day_name,
+        
+        # Статистика
         'total_schedules': total_schedules,
         'unique_groups': unique_groups,
-        'unique_teachers': unique_teachers,
-        'show_all': True,  # Бардык маалыматты көрсөтүү
+        'total_teachers': unique_teachers,
+        'total_subjects': unique_subjects,
+        'total_rooms': len(schedules.values_list('room', flat=True).distinct()),
+        
+        # Колдонуучу маалыматы
+        'user_role': profile.role,
+        'today': today,
     }
     
     return render(request, 'universal_schedule.html', context)
@@ -1645,15 +1806,25 @@ def weekly_schedule(request):
     
     # Бардык роль үчүн ачык, бирок ар бир роль өз маалыматын көрөт
     
-    # Күндөр тизмеси
-    days = [
-        ('Monday', 'Дүйшөмбү'),
-        ('Tuesday', 'Шейшемби'), 
-        ('Wednesday', 'Шаршемби'),
-        ('Thursday', 'Бейшемби'),
-        ('Friday', 'Жума'),
-        ('Saturday', 'Ишемби'),
-    ]
+    # Күндөр тизмеси - студенттер үчүн жума күндөрү гана
+    if profile.role == 'STUDENT':
+        days = [
+            ('Monday', 'Дүйшөмбү'),
+            ('Tuesday', 'Шейшемби'), 
+            ('Wednesday', 'Шаршемби'),
+            ('Thursday', 'Бейшемби'),
+            ('Friday', 'Жума'),
+        ]
+    else:
+        # Башка роллор үчүн бардык күндөр
+        days = [
+            ('Monday', 'Дүйшөмбү'),
+            ('Tuesday', 'Шейшемби'), 
+            ('Wednesday', 'Шаршемби'),
+            ('Thursday', 'Бейшемби'),
+            ('Friday', 'Жума'),
+            ('Saturday', 'Ишемби'),
+        ]
     
     # Убакыт периоддору
     time_slots = [
@@ -1664,13 +1835,18 @@ def weekly_schedule(request):
         ('15:40', '17:10', '5-пара'),
     ]
     
-    # Роль боюнча филтер
+    # Роль боюнча филтер жана жума күндөрү
     schedules_query = Schedule.objects.select_related('subject__teacher', 'group__course').all()
     
     if profile.role == 'STUDENT':
         try:
             student = Student.objects.get(user=request.user)
-            schedules_query = schedules_query.filter(group=student.group)
+            # Студенттер үчүн жума күндөрү гана
+            weekdays = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday']
+            schedules_query = schedules_query.filter(
+                group=student.group,
+                day__in=weekdays
+            )
         except Student.DoesNotExist:
             schedules_query = Schedule.objects.none()
     elif profile.role == 'TEACHER':
@@ -1736,3 +1912,209 @@ def weekly_schedule(request):
     }
     
     return render(request, 'weekly_schedule.html', context)
+
+
+# ============= ПРОФИЛ ЖАНА КОЛДОНУУЧУ БАШКАРУУ =============
+
+@login_required
+def profile_view(request):
+    """Колдонуучунун профилин көрсөтүү"""
+    try:
+        profile = request.user.userprofile
+    except UserProfile.DoesNotExist:
+        # Эгер профил жок болсо, жаңысын түзүү
+        profile = UserProfile.objects.create(user=request.user)
+    
+    context = {
+        'profile': profile,
+        'user': request.user,
+    }
+    return render(request, 'profile/profile_view.html', context)
+
+
+@login_required
+def profile_edit(request):
+    """Профилди өзгөртүү"""
+    try:
+        profile = request.user.userprofile
+    except UserProfile.DoesNotExist:
+        profile = UserProfile.objects.create(user=request.user)
+
+    if request.method == 'POST':
+        user_form = UserUpdateForm(request.POST, instance=request.user)
+        profile_form = UserProfileForm(request.POST, request.FILES, instance=profile)
+        
+        if user_form.is_valid() and profile_form.is_valid():
+            user_form.save()
+            profile_form.save()
+            # Профилдин толуктугун текшерүү
+            profile.check_profile_completeness()
+            messages.success(request, 'Профилиңиз ийгиликтүү жаңыртылды!')
+            return redirect('profile_view')
+    else:
+        user_form = UserUpdateForm(instance=request.user)
+        profile_form = UserProfileForm(instance=profile)
+
+    context = {
+        'user_form': user_form,
+        'profile_form': profile_form,
+        'profile': profile,
+    }
+    return render(request, 'profile/profile_edit.html', context)
+
+
+@login_required
+def change_password(request):
+    """Сыр сөздү өзгөртүү"""
+    if request.method == 'POST':
+        form = PasswordChangeCustomForm(user=request.user, data=request.POST)
+        if form.is_valid():
+            request.user.set_password(form.cleaned_data['new_password1'])
+            request.user.save()
+            messages.success(request, 'Сыр сөзүңүз ийгиликтүү өзгөртүлдү! Кайрадан кириңиз.')
+            return redirect('login')
+    else:
+        form = PasswordChangeCustomForm(user=request.user)
+
+    context = {
+        'form': form,
+    }
+    return render(request, 'profile/change_password.html', context)
+
+
+@login_required
+def profile_photo_delete(request):
+    """Профил сүрөтүн өчүрүү"""
+    if request.method == 'POST':
+        try:
+            profile = request.user.userprofile
+            if profile.profile_photo:
+                profile.profile_photo.delete()
+                profile.save()
+                messages.success(request, 'Профил сүрөтү ийгиликтүү өчүрүлдү.')
+            else:
+                messages.info(request, 'Профил сүрөтү жок.')
+        except UserProfile.DoesNotExist:
+            messages.error(request, 'Профил табылган жок.')
+        
+        return redirect('profile_edit')
+    
+    return redirect('profile_view')
+
+
+@login_required  
+def profile_completion_check(request):
+    """Профилдин толуктугун текшерүү (AJAX)"""
+    try:
+        profile = request.user.userprofile
+        is_complete = profile.check_profile_completeness()
+        
+        completion_data = {
+            'is_complete': is_complete,
+            'missing_fields': [],
+            'completion_percentage': 0
+        }
+        
+        # Керектүү талаалар
+        required_fields = [
+            ('first_name', 'Аты', request.user.first_name),
+            ('last_name', 'Фамилиясы', request.user.last_name),
+            ('email', 'Email', request.user.email),
+            ('phone_number', 'Телефон', profile.phone_number),
+        ]
+        
+        filled_count = 0
+        total_count = len(required_fields)
+        
+        for field_name, field_label, field_value in required_fields:
+            if not field_value:
+                completion_data['missing_fields'].append(field_label)
+            else:
+                filled_count += 1
+        
+        completion_data['completion_percentage'] = int((filled_count / total_count) * 100)
+        
+        return JsonResponse(completion_data)
+        
+    except UserProfile.DoesNotExist:
+        return JsonResponse({
+            'is_complete': False,
+            'missing_fields': ['Профил табылган жок'],
+            'completion_percentage': 0
+        })
+
+
+def get_user_profile_or_create(user):
+    """Колдонуучунун профилин алуу же жок болсо жаңысын түзүү"""
+    try:
+        return user.userprofile
+    except UserProfile.DoesNotExist:
+        return UserProfile.objects.create(user=user)
+
+
+@login_required
+@csrf_exempt
+def mark_student_attendance(request, schedule_id):
+    """Студент өзүнүн катышуусун белгилөө"""
+    if request.method != 'POST':
+        return JsonResponse({'error': 'POST method required'}, status=405)
+    
+    try:
+        schedule = get_object_or_404(Schedule, id=schedule_id)
+        student_profile = request.user.userprofile
+        
+        # Студент экенин текшерүү
+        if student_profile.role != 'STUDENT':
+            return JsonResponse({'error': 'Only students can mark their own attendance'}, status=403)
+        
+        # Студенттин бул группада экенин текшерүү
+        try:
+            student = Student.objects.get(user=request.user)
+            if student.group != schedule.group:
+                return JsonResponse({'error': 'You are not enrolled in this class'}, status=403)
+        except Student.DoesNotExist:
+            return JsonResponse({'error': 'Student profile not found'}, status=404)
+        
+        # Учурдагу жума үчүн гана катышуу белгилөөгө уруксат берүү
+        from datetime import datetime, timedelta
+        today = datetime.now().date()
+        
+        # Жуманын башталышы (дүйшөмбү)
+        days_since_monday = today.weekday()
+        week_start = today - timedelta(days=days_since_monday)
+        week_end = week_start + timedelta(days=6)
+        
+        # Schedule күнүн алуу
+        schedule_date = today  # Азырынча бүгүнкү күн үчүн
+        
+        if not (week_start <= schedule_date <= week_end):
+            return JsonResponse({'error': 'Attendance can only be marked for current week'}, status=400)
+        
+        # JSON маалыматтарды алуу
+        data = json.loads(request.body)
+        status = data.get('status')
+        
+        if status not in ['Present', 'Absent', 'Late']:
+            return JsonResponse({'error': 'Invalid attendance status'}, status=400)
+        
+        # Attendance жазууну түзүү же жаңылоо
+        attendance, created = Attendance.objects.update_or_create(
+            student=student,
+            schedule=schedule,
+            date=schedule_date,
+            defaults={
+                'status': status,
+                'marked_by_student': True,
+                'marked_at': datetime.now()
+            }
+        )
+        
+        return JsonResponse({
+            'success': True,
+            'status': status,
+            'message': f'Катышуу "{status}" деп белгиленди',
+            'created': created
+        })
+        
+    except Exception as e:
+        return JsonResponse({'error': f'Error marking attendance: {str(e)}'}, status=500)

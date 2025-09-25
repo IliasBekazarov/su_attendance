@@ -1,38 +1,39 @@
 {% extends 'base.html' %}
 {% load django_bootstrap5 %}
-{% block title %}Детальный Отчет{% endblock %}
+{% load i18n %}
+{% block title %}{% trans "Detailed Report" %}{% endblock %}
 {% block content %}
 <div class="container mt-5">
-    <h2 class="mb-4">📊 Катышуу Системасы - Детальный Отчет</h2>
+    <h2 class="mb-4">📊 {% trans "Attendance System - Detailed Report" %}</h2>
     
     <!-- Фильтры -->
     <div class="card mb-4">
         <div class="card-header bg-primary text-white">
-            <h5 class="mb-0">🔍 Фильтр жана Настройкалар</h5>
+            <h5 class="mb-0">🔍 {% trans "Filter and Settings" %}</h5>
         </div>
         <div class="card-body">
             <form method="GET" class="row g-3">
                 <div class="col-md-3">
-                    <label class="form-label">Отчет түрү:</label>
+                    <label class="form-label">{% trans "Report type:" %}</label>
                     <select name="report_type" class="form-select">
-                        <option value="all" {% if report_type == 'all' %}selected{% endif %}>Бардыгы</option>
-                        <option value="daily" {% if report_type == 'daily' %}selected{% endif %}>Бүгүнкү</option>
-                        <option value="weekly" {% if report_type == 'weekly' %}selected{% endif %}>Жумалык</option>
-                        <option value="monthly" {% if report_type == 'monthly' %}selected{% endif %}>Айлык</option>
+                        <option value="all" {% if report_type == 'all' %}selected{% endif %}>{% trans "All" %}</option>
+                        <option value="daily" {% if report_type == 'daily' %}selected{% endif %}>{% trans "Today" %}</option>
+                        <option value="weekly" {% if report_type == 'weekly' %}selected{% endif %}>{% trans "Weekly" %}</option>
+                        <option value="monthly" {% if report_type == 'monthly' %}selected{% endif %}>{% trans "Monthly" %}</option>
                     </select>
                 </div>
                 <div class="col-md-2">
-                    <label class="form-label">Башталуу дата:</label>
+                    <label class="form-label">{% trans "Start date:" %}</label>
                     <input type="date" name="start_date" class="form-control" value="{{ start_date|date:'Y-m-d' }}">
                 </div>
                 <div class="col-md-2">
-                    <label class="form-label">Аяктоо дата:</label>
+                    <label class="form-label">{% trans "End date:" %}</label>
                     <input type="date" name="end_date" class="form-control" value="{{ end_date|date:'Y-m-d' }}">
                 </div>
                 <div class="col-md-3">
-                    <label class="form-label">Студент:</label>
+                    <label class="form-label">{% trans "Student:" %}</label>
                     <select name="student" class="form-select">
-                        <option value="">Бардык студенттер</option>
+                        <option value="">{% trans "All students" %}</option>
                         {% for student in students %}
                         <option value="{{ student.id }}" {% if student_id == student.id|stringformat:"s" %}selected{% endif %}>
                             {{ student.name }}
@@ -41,9 +42,9 @@
                     </select>
                 </div>
                 <div class="col-md-2">
-                    <label class="form-label">Аракет:</label>
+                    <label class="form-label">{% trans "Action:" %}</label>
                     <div class="d-grid">
-                        <button type="submit" class="btn btn-primary">🔍 Фильтр</button>
+                        <button type="submit" class="btn btn-primary">🔍 {% trans "Filter" %}</button>
                     </div>
                 </div>
             </form>
@@ -56,7 +57,7 @@
             <div class="card bg-primary text-white">
                 <div class="card-body text-center">
                     <h4>{{ total_records }}</h4>
-                    <small>Жалпы жазуулар</small>
+                    <small>{% trans "Total records" %}</small>
                 </div>
             </div>
         </div>

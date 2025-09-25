@@ -1,11 +1,12 @@
 {% extends 'base.html' %}
 {% load static %}
+{% load i18n %}
 
-{% block title %}Расписание{% endblock %}
+{% block title %}{% trans "Schedule" %}{% endblock %}
 
 {% block content %}
 <div class="timetable-container">
-    <h2 class="timetable-title">Расписание</h2>
+    <h2 class="timetable-title">{% trans "Schedule" %}</h2>
     <div class="course-selector">
         {% for course in courses %}
         <button class="course-btn {% if course.id == active_course.id %}active-course-btn{% endif %}" 
@@ -22,8 +23,8 @@
             <table class="timetable">
                 <thead>
                     <tr>
-                        <th>Пара</th>
-                        <th>Убакыт</th>
+                        <th>{% trans "Period" %}</th>
+                        <th>{% trans "Time" %}</th>
                         {% for group in course.group_set.all %}
                         <th>{{ group.name }}</th>
                         {% endfor %}

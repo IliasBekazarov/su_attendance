@@ -5,7 +5,19 @@ from .models import UserProfile, Student, Course, Group, Teacher, Attendance, No
 
 @receiver(post_save, sender=User)
 def create_user_profile(sender, instance, created, **kwargs):
+    """Жаңы колдонуучу катталганда автоматтык түрдө профил түзүү"""
     if created:
+        profile = UserProfile.objects.create(user=instance, role='STUDENT')
+        # Профилдин толуктугун текшерүү
+        profile.check_profile_completeness()
+
+@receiver(post_save, sender=User)
+def save_user_profile(sender, instance, **kwargs):
+    """User сакталганда профилди да сактоо"""
+    try:
+        instance.userprofile.save()
+    except UserProfile.DoesNotExist:
+        # Эгер профил жок болсо, жаңысын түзүү
         UserProfile.objects.create(user=instance, role='STUDENT')
 
 @receiver(post_save, sender=UserProfile)

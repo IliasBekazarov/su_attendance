@@ -66,3 +66,28 @@ def get_schedules_for_day_period(schedule_matrix, args):
         return []
     except (ValueError, TypeError):
         return []
+
+@register.filter
+def get_day_name(day_value):
+    """
+    Күндөрдүн санын ата-жөнүнө айландырат
+    """
+    if not day_value:
+        return 'Белгисиз күн'
+    
+    try:
+        day_value = int(day_value)
+    except (ValueError, TypeError):
+        return f'Күн {day_value}'
+    
+    day_names = {
+        1: 'Дүйшөмбү',
+        2: 'Шейшемби', 
+        3: 'Шаршемби',
+        4: 'Бейшемби',
+        5: 'Жума',
+        6: 'Ишемби',
+        0: 'Жекшемби',  # Python datetime жекшембини 0 деп алат
+        7: 'Жекшемби'   # Кээ бир системалар 7 деп алышат
+    }
+    return day_names.get(day_value, f'Күн {day_value}')
