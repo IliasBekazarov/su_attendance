@@ -1,0 +1,642 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Менин расписанием{% endblock %}
+
+{% block extra_css %}
+<style>
+    .schedule-container {
+        padding: 20px;
+        max-width: 1400px;
+        margin: 0 auto;
+    }
+    
+    .header-section {
+        background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+        border-radius: 15px;
+        padding: 25px;
+        margin-bottom: 30px;
+        color: white;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+        text-align: center;
+    }
+    
+    .header-title {
+        font-size: 2rem;
+        font-weight: 600;
+        margin-bottom: 10px;
+    }
+    
+    .header-subtitle {
+        font-size: 1.1rem;
+        opacity: 0.9;
+        margin-bottom: 15px;
+    }
+    
+    .current-time {
+        font-size: 1.5rem;
+        font-weight: bold;
+        margin: 10px 0;
+    }
+    
+    .current-date {
+        font-size: 1rem;
+        opacity: 0.8;
+    }
+    
+    .schedule-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+        gap: 20px;
+        margin-top: 20px;
+    }
+    
+    .lesson-card {
+        background: var(--card-bg);
+        border-radius: 12px;
+        padding: 20px;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+        border: 2px solid transparent;
+        transition: all 0.3s ease;
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .lesson-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 4px;
+        background: var(--primary-color);
+        transition: all 0.3s ease;
+    }
+    
+    .lesson-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+    }
+    
+    .lesson-card.current {
+        border-color: #28a745;
+        background: rgba(40, 167, 69, 0.05);
+    }
+    
+    .lesson-card.current::before {
+        background: #28a745;
+        height: 6px;
+    }
+    
+    .lesson-card.upcoming {
+        border-color: #007bff;
+        background: rgba(0, 123, 255, 0.05);
+    }
+    
+    .lesson-card.upcoming::before {
+        background: #007bff;
+    }
+    
+    .lesson-card.past {
+        opacity: 0.7;
+        border-color: #6c757d;
+    }
+    
+    .lesson-card.past::before {
+        background: #6c757d;
+    }
+    
+    .lesson-status {
+        position: absolute;
+        top: 15px;
+        right: 15px;
+        padding: 4px 8px;
+        border-radius: 12px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        text-transform: uppercase;
+    }
+    
+    .status-current {
+        background: #28a745;
+        color: white;
+    }
+    
+    .status-upcoming {
+        background: #007bff;
+        color: white;
+    }
+    
+    .status-past {
+        background: #6c757d;
+        color: white;
+    }
+    
+    .lesson-time {
+        font-size: 1.3rem;
+        font-weight: 700;
+        color: var(--primary-color);
+        margin-bottom: 10px;
+        display: flex;
+        align-items: center;
+    }
+    
+    .lesson-time i {
+        margin-right: 8px;
+        font-size: 1.1rem;
+    }
+    
+    .lesson-subject {
+        font-size: 1.4rem;
+        font-weight: 600;
+        color: var(--text-primary);
+        margin-bottom: 12px;
+        line-height: 1.3;
+    }
+    
+    .lesson-details {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+    }
+    
+    .lesson-teacher, .lesson-room {
+        display: flex;
+        align-items: center;
+        color: var(--text-secondary);
+        font-size: 0.95rem;
+    }
+    
+    .lesson-teacher i, .lesson-room i {
+        margin-right: 8px;
+        color: var(--primary-color);
+        width: 16px;
+    }
+    
+    .no-lessons {
+        text-align: center;
+        padding: 60px 20px;
+        color: var(--text-secondary);
+    }
+    
+    .no-lessons i {
+        font-size: 4rem;
+        color: var(--primary-color);
+        margin-bottom: 20px;
+    }
+    
+    .no-lessons h3 {
+        color: var(--text-primary);
+        margin-bottom: 10px;
+    }
+    
+    /* Attendance Buttons */
+    .attendance-actions {
+        border-top: 1px solid var(--border-color);
+        padding-top: 15px;
+        margin-top: 15px;
+    }
+    
+    .attendance-status {
+        font-size: 0.9rem;
+        color: var(--text-secondary);
+        margin-bottom: 10px;
+        text-align: center;
+    }
+    
+    .attendance-status.marked {
+        color: var(--success-color);
+        font-weight: 600;
+    }
+    
+    .attendance-buttons {
+        display: flex;
+        gap: 8px;
+        justify-content: center;
+    }
+    
+    .btn-attendance {
+        background: var(--card-bg);
+        border: 2px solid var(--border-color);
+        border-radius: 50%;
+        width: 45px;
+        height: 45px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        font-size: 1.1rem;
+        color: var(--text-secondary);
+    }
+    
+    .btn-attendance:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    }
+    
+    .btn-present {
+        border-color: #28a745;
+        color: #28a745;
+    }
+    
+    .btn-present:hover,
+    .btn-present.active {
+        background: #28a745;
+        color: white;
+        box-shadow: 0 4px 12px rgba(40, 167, 69, 0.3);
+    }
+    
+    .btn-absent {
+        border-color: #dc3545;
+        color: #dc3545;
+    }
+    
+    .btn-absent:hover,
+    .btn-absent.active {
+        background: #dc3545;
+        color: white;
+        box-shadow: 0 4px 12px rgba(220, 53, 69, 0.3);
+    }
+    
+    .btn-late {
+        border-color: #ffc107;
+        color: #ffc107;
+    }
+    
+    .btn-late:hover,
+    .btn-late.active {
+        background: #ffc107;
+        color: white;
+        box-shadow: 0 4px 12px rgba(255, 193, 7, 0.3);
+    }
+    
+    .btn-attendance:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+        transform: none !important;
+    }
+    
+    .btn-attendance.loading {
+        pointer-events: none;
+    }
+    
+    .btn-attendance.loading i {
+        animation: spin 1s linear infinite;
+    }
+    
+    @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+    }
+    
+    /* Responsive */
+    @media (max-width: 768px) {
+        .schedule-container {
+            padding: 15px;
+        }
+        
+        .header-title {
+            font-size: 1.5rem;
+        }
+        
+        .current-time {
+            font-size: 1.2rem;
+        }
+        
+        .schedule-grid {
+            grid-template-columns: 1fr;
+            gap: 15px;
+        }
+        
+        .lesson-card {
+            padding: 15px;
+        }
+        
+        .lesson-subject {
+            font-size: 1.2rem;
+        }
+        
+        .lesson-time {
+            font-size: 1.1rem;
+        }
+    }
+    
+    @media (max-width: 576px) {
+        .lesson-details {
+            gap: 6px;
+        }
+        
+        .lesson-teacher, .lesson-room {
+            font-size: 0.9rem;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="schedule-container">
+    <!-- Header Section -->
+    <div class="header-section">
+        <h1 class="header-title">
+            <i class="fas fa-graduation-cap me-2"></i>Менин расписанием
+        </h1>
+        <p class="header-subtitle">{{ student.group.name }} тобу</p>
+        <div class="current-time" id="current-time"></div>
+        <div class="current-date" id="current-date"></div>
+    </div>
+    
+    <!-- Schedule Grid -->
+    {% if schedules %}
+        <div class="schedule-grid">
+            {% for schedule in schedules %}
+            <div class="lesson-card" data-start-time="{{ schedule.start_time|time:'H:i' }}" data-end-time="{{ schedule.end_time|time:'H:i' }}" data-schedule-id="{{ schedule.id }}">
+                <div class="lesson-status" id="status-{{ forloop.counter }}">Upcoming</div>
+                
+                <div class="lesson-time">
+                    <i class="far fa-clock"></i>
+                    {{ schedule.start_time|time:"H:i" }} - {{ schedule.end_time|time:"H:i" }}
+                </div>
+                
+                <div class="lesson-subject">{{ schedule.subject.name }}</div>
+                
+                <div class="lesson-details">
+                    <div class="lesson-teacher">
+                        <i class="fas fa-chalkboard-teacher"></i>
+                        {{ schedule.subject.teacher.name }}
+                    </div>
+                    
+                    <div class="lesson-room">
+                        <i class="fas fa-door-open"></i>
+                        {{ schedule.room|default:"Кабинет көрсөтүлгөн эмес" }}
+                    </div>
+                </div>
+                
+                <!-- Катышуу белгилөө баскычтары -->
+                <div class="attendance-actions" id="attendance-{{ schedule.id }}" style="margin-top: 15px;">
+                    <div class="attendance-status" id="attendance-status-{{ schedule.id }}" style="margin-bottom: 10px; font-size: 0.9rem; color: var(--text-secondary);">
+                        Катышууну белгилеңиз:
+                    </div>
+                    <div class="attendance-buttons" style="display: flex; gap: 8px;">
+                        <button class="btn-attendance btn-present" onclick="markAttendance({{ schedule.id }}, 'Present')" 
+                                id="btn-present-{{ schedule.id }}" title="Катыштым">
+                            <i class="fas fa-check"></i>
+                        </button>
+                        <button class="btn-attendance btn-absent" onclick="markAttendance({{ schedule.id }}, 'Absent')" 
+                                id="btn-absent-{{ schedule.id }}" title="Катышкан жокмун">
+                            <i class="fas fa-times"></i>
+                        </button>
+                        <button class="btn-attendance btn-late" onclick="markAttendance({{ schedule.id }}, 'Late')" 
+                                id="btn-late-{{ schedule.id }}" title="Кечиктим">
+                            <i class="fas fa-clock"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="no-lessons">
+            <i class="fas fa-calendar-times"></i>
+            <h3>Бүгүн сабак жок!</h3>
+            <p>Эртеңки расписаниени карап көрүңүз же эс алыңыз 😊</p>
+        </div>
+    {% endif %}
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    function updateTime() {
+        const now = new Date();
+        const timeElement = document.getElementById('current-time');
+        const dateElement = document.getElementById('current-date');
+        
+        // Update time
+        timeElement.textContent = now.toLocaleTimeString('ky-KG', {
+            hour: '2-digit',
+            minute: '2-digit',
+            second: '2-digit'
+        });
+        
+        // Update date
+        const days = ['Жекшемби', 'Дүйшөмбү', 'Шейшемби', 'Шаршемби', 'Бейшемби', 'Жума', 'Ишемби'];
+        const months = ['Январь', 'Февраль', 'Март', 'Апрель', 'Май', 'Июнь',
+                       'Июль', 'Август', 'Сентябрь', 'Октябрь', 'Ноябрь', 'Декабрь'];
+        
+        dateElement.textContent = `${days[now.getDay()]}, ${now.getDate()} ${months[now.getMonth()]} ${now.getFullYear()}`;
+        
+        // Update lesson statuses
+        updateLessonStatuses(now);
+    }
+    
+    function updateLessonStatuses(now) {
+        const currentHour = now.getHours();
+        const currentMinute = now.getMinutes();
+        const currentTimeMinutes = currentHour * 60 + currentMinute;
+        
+        // Get current week boundaries
+        const today = new Date();
+        const dayOfWeek = today.getDay();
+        const mondayOffset = dayOfWeek === 0 ? 6 : dayOfWeek - 1; // Sunday = 0, Monday = 1
+        const monday = new Date(today);
+        monday.setDate(today.getDate() - mondayOffset);
+        monday.setHours(0, 0, 0, 0);
+        
+        const sunday = new Date(monday);
+        sunday.setDate(monday.getDate() + 6);
+        sunday.setHours(23, 59, 59, 999);
+        
+        const isCurrentWeek = now >= monday && now <= sunday;
+        
+        const lessonCards = document.querySelectorAll('.lesson-card');
+        
+        lessonCards.forEach((card, index) => {
+            const startTime = card.dataset.startTime.split(':');
+            const endTime = card.dataset.endTime.split(':');
+            const startMinutes = parseInt(startTime[0]) * 60 + parseInt(startTime[1]);
+            const endMinutes = parseInt(endTime[0]) * 60 + parseInt(endTime[1]);
+            
+            const statusElement = document.getElementById(`status-${index + 1}`);
+            const attendanceDiv = document.getElementById(`attendance-${card.dataset.scheduleId}`);
+            
+            // Remove all status classes
+            card.classList.remove('current', 'upcoming', 'past');
+            statusElement.classList.remove('status-current', 'status-upcoming', 'status-past');
+            
+            if (currentTimeMinutes >= startMinutes && currentTimeMinutes <= endMinutes) {
+                // Current lesson
+                card.classList.add('current');
+                statusElement.classList.add('status-current');
+                statusElement.textContent = 'Азыр';
+            } else if (currentTimeMinutes < startMinutes) {
+                // Upcoming lesson
+                card.classList.add('upcoming');
+                statusElement.classList.add('status-upcoming');
+                statusElement.textContent = 'Келечек';
+            } else {
+                // Past lesson
+                card.classList.add('past');
+                statusElement.classList.add('status-past');
+                statusElement.textContent = 'Өттү';
+            }
+            
+            // Show/hide attendance marking based on current week
+            if (attendanceDiv) {
+                if (isCurrentWeek) {
+                    attendanceDiv.style.display = 'block';
+                } else {
+                    attendanceDiv.style.display = 'none';
+                }
+            }
+        });
+    }
+    
+    // Update time every second
+    updateTime();
+    setInterval(updateTime, 1000);
+});
+
+// Attendance marking function
+function markAttendance(scheduleId, status) {
+    const button = document.getElementById(`btn-${status.toLowerCase()}-${scheduleId}`);
+    const statusDiv = document.getElementById(`attendance-status-${scheduleId}`);
+    const allButtons = document.querySelectorAll(`#attendance-${scheduleId} .btn-attendance`);
+    
+    // Show loading state
+    button.classList.add('loading');
+    button.disabled = true;
+    
+    // CSRF token
+    const csrftoken = document.querySelector('[name=csrfmiddlewaretoken]')?.value || 
+                     getCookie('csrftoken');
+    
+    fetch(`/student/attendance/mark/${scheduleId}/`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': csrftoken
+        },
+        body: JSON.stringify({
+            status: status
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Remove active class from all buttons
+            allButtons.forEach(btn => btn.classList.remove('active'));
+            
+            // Add active class to selected button
+            button.classList.add('active');
+            
+            // Update status message
+            const statusText = {
+                'Present': 'Катыштым ✓',
+                'Absent': 'Катышкан жокмун ✗',
+                'Late': 'Кечиктим ⏰'
+            };
+            
+            statusDiv.textContent = statusText[status];
+            statusDiv.classList.add('marked');
+            
+            // Show success message
+            showToast('success', data.message);
+        } else {
+            showToast('error', data.error || 'Ката кетти!');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showToast('error', 'Тармак катасы!');
+    })
+    .finally(() => {
+        // Remove loading state
+        button.classList.remove('loading');
+        button.disabled = false;
+    });
+}
+
+// Get CSRF cookie function
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+
+// Toast notification function
+function showToast(type, message) {
+    // Create toast element
+    const toast = document.createElement('div');
+    toast.className = `toast-notification toast-${type}`;
+    toast.innerHTML = `
+        <div class="toast-content">
+            <i class="fas fa-${type === 'success' ? 'check-circle' : 'exclamation-circle'}"></i>
+            <span>${message}</span>
+        </div>
+    `;
+    
+    // Add styles for toast
+    const style = document.createElement('style');
+    style.textContent = `
+        .toast-notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 15px 20px;
+            border-radius: 8px;
+            color: white;
+            font-weight: 500;
+            z-index: 10000;
+            min-width: 300px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+            transform: translateX(400px);
+            transition: transform 0.3s ease;
+        }
+        
+        .toast-success {
+            background: #28a745;
+        }
+        
+        .toast-error {
+            background: #dc3545;
+        }
+        
+        .toast-content {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .toast-notification.show {
+            transform: translateX(0);
+        }
+    `;
+    
+    if (!document.querySelector('#toast-styles')) {
+        style.id = 'toast-styles';
+        document.head.appendChild(style);
+    }
+    
+    // Add to page
+    document.body.appendChild(toast);
+    
+    // Show toast
+    setTimeout(() => toast.classList.add('show'), 100);
+    
+    // Remove toast after 3 seconds
+    setTimeout(() => {
+        toast.classList.remove('show');
+        setTimeout(() => toast.remove(), 300);
+    }, 3000);
+}
+</script>
+{% endblock %}

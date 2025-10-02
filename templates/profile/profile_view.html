@@ -1,0 +1,258 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Менин Профилим{% endblock %}
+
+{% block extra_css %}
+<style>
+.profile-card {
+    border: none;
+    border-radius: 15px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    overflow: hidden;
+}
+
+.profile-header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 2rem 0;
+    text-align: center;
+}
+
+.profile-photo {
+    width: 120px;
+    height: 120px;
+    border-radius: 50%;
+    border: 5px solid white;
+    object-fit: cover;
+    margin-bottom: 1rem;
+}
+
+.profile-photo-placeholder {
+    width: 120px;
+    height: 120px;
+    border-radius: 50%;
+    border: 5px solid white;
+    background: #f8f9fa;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 3rem;
+    color: #6c757d;
+    margin: 0 auto 1rem auto;
+}
+
+.info-item {
+    padding: 0.75rem 0;
+    border-bottom: 1px solid #eee;
+}
+
+.info-item:last-child {
+    border-bottom: none;
+}
+
+.info-label {
+    font-weight: 600;
+    color: #495057;
+    margin-bottom: 0.25rem;
+}
+
+.info-value {
+    color: #6c757d;
+}
+
+.completion-bar {
+    height: 8px;
+    border-radius: 4px;
+    overflow: hidden;
+    background: #e9ecef;
+}
+
+.completion-progress {
+    height: 100%;
+    background: linear-gradient(90deg, #28a745, #20c997);
+    transition: width 0.3s ease;
+}
+
+.role-badge {
+    font-size: 0.9rem;
+    padding: 0.5rem 1rem;
+    border-radius: 20px;
+}
+
+.edit-btn {
+    background: linear-gradient(135deg, #28a745, #20c997);
+    border: none;
+    border-radius: 25px;
+    padding: 0.75rem 2rem;
+    color: white;
+    font-weight: 600;
+    transition: all 0.3s ease;
+}
+
+.edit-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(40, 167, 69, 0.3);
+    color: white;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <!-- Profile Card -->
+            <div class="card profile-card">
+                <!-- Header with photo and basic info -->
+                <div class="profile-header">
+                    {% if profile.profile_photo %}
+                        <img src="{{ profile.profile_photo.url }}" alt="Profile Photo" class="profile-photo">
+                    {% else %}
+                        <div class="profile-photo-placeholder">
+                            <i class="fas fa-user"></i>
+                        </div>
+                    {% endif %}
+                    
+                    <h3 class="mb-1">{{ profile.full_name }}</h3>
+                    <span class="badge role-badge bg-light text-dark">{{ profile.get_role_display }}</span>
+                </div>
+
+                <!-- Profile completion indicator -->
+                <div class="card-body">
+                    <div class="row mb-4">
+                        <div class="col-12">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <small class="text-muted">Профилдин толуктугу</small>
+                                <small class="text-muted"><span id="completion-percentage">0</span>%</small>
+                            </div>
+                            <div class="completion-bar">
+                                <div class="completion-progress" id="completion-progress" style="width: 0%"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Profile Information -->
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h5 class="text-primary mb-3"><i class="fas fa-user me-2"></i>Жеке маалыматтар</h5>
+                            
+                            <div class="info-item">
+                                <div class="info-label">Колдонуучу аты</div>
+                                <div class="info-value">{{ user.username }}</div>
+                            </div>
+
+                            <div class="info-item">
+                                <div class="info-label">Email</div>
+                                <div class="info-value">{{ user.email|default:"Көрсөтүлгөн эмес" }}</div>
+                            </div>
+
+                            <div class="info-item">
+                                <div class="info-label">Телефон</div>
+                                <div class="info-value">{{ profile.phone_number|default:"Көрсөтүлгөн эмес" }}</div>
+                            </div>
+
+                            <div class="info-item">
+                                <div class="info-label">Туулган күнү</div>
+                                <div class="info-value">
+                                    {% if profile.birth_date %}
+                                        {{ profile.birth_date|date:"j E Y" }}
+                                        {% if profile.age %}
+                                            ({{ profile.age }} жаш)
+                                        {% endif %}
+                                    {% else %}
+                                        Көрсөтүлгөн эмес
+                                    {% endif %}
+                                </div>
+                            </div>
+
+                            <div class="info-item">
+                                <div class="info-label">Жынысы</div>
+                                <div class="info-value">{{ profile.get_gender_display|default:"Көрсөтүлгөн эмес" }}</div>
+                            </div>
+                        </div>
+
+                        <div class="col-md-6">
+                            <h5 class="text-primary mb-3"><i class="fas fa-map-marker-alt me-2"></i>Байланыш маалыматтары</h5>
+                            
+                            <div class="info-item">
+                                <div class="info-label">Дареги</div>
+                                <div class="info-value">{{ profile.address|default:"Көрсөтүлгөн эмес" }}</div>
+                            </div>
+
+                            <div class="info-item">
+                                <div class="info-label">Тез кырдаал байланышуучусу</div>
+                                <div class="info-value">{{ profile.emergency_contact_name|default:"Көрсөтүлгөн эмес" }}</div>
+                            </div>
+
+                            <div class="info-item">
+                                <div class="info-label">Тез кырдаал телефону</div>
+                                <div class="info-value">{{ profile.emergency_contact_phone|default:"Көрсөтүлгөн эмес" }}</div>
+                            </div>
+
+                            <div class="info-item">
+                                <div class="info-label">Катталган күнү</div>
+                                <div class="info-value">{{ user.date_joined|date:"j E Y" }}</div>
+                            </div>
+
+                            <div class="info-item">
+                                <div class="info-label">Акыркы жаңыртылган</div>
+                                <div class="info-value">{{ profile.updated_at|date:"j E Y, H:i" }}</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Bio section -->
+                    {% if profile.bio %}
+                    <div class="row mt-4">
+                        <div class="col-12">
+                            <h5 class="text-primary mb-3"><i class="fas fa-info-circle me-2"></i>Өзү жөнүндө</h5>
+                            <div class="bg-light p-3 rounded">
+                                {{ profile.bio|linebreaks }}
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    <!-- Action buttons -->
+                    <div class="row mt-4">
+                        <div class="col-12 text-center">
+                            <a href="{% url 'profile_edit' %}" class="btn edit-btn me-3">
+                                <i class="fas fa-edit me-2"></i>Профилди өзгөртүү
+                            </a>
+                            <a href="{% url 'change_password' %}" class="btn btn-outline-secondary">
+                                <i class="fas fa-key me-2"></i>Сыр сөздү өзгөртүү
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Profile completion check
+$(document).ready(function() {
+    $.ajax({
+        url: '{% url "profile_completion_check" %}',
+        type: 'GET',
+        success: function(data) {
+            $('#completion-percentage').text(data.completion_percentage);
+            $('#completion-progress').css('width', data.completion_percentage + '%');
+            
+            if (!data.is_complete && data.missing_fields.length > 0) {
+                let message = 'Профилиңизди толтуруу үчүн бул талааларды толтуруңуз: ' + data.missing_fields.join(', ');
+                setTimeout(function() {
+                    if (confirm(message + '\n\nПрофилди өзгөртүү бетине өтөмбү?')) {
+                        window.location.href = '{% url "profile_edit" %}';
+                    }
+                }, 1000);
+            }
+        }
+    });
+});
+</script>
+{% endblock %}

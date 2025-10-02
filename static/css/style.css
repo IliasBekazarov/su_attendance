@@ -1,0 +1,707 @@
+/* Theme Variables */
+:root {
+    /* Light Theme - Blue & White */
+    --bg-color: #ffffff;
+    --bg-primary: #f0f8ff;
+    --bg-secondary: #ffffff;
+    --bg-tertiary: #e6f3ff;
+    --secondary-bg: #f0f8ff;
+    --text-color: #1e3a8a;
+    --text-primary: #1e3a8a;
+    --text-secondary: #3b82f6;
+    --text-muted: #6b7280;
+    --border-color: #93c5fd;
+    --primary-color: #2563eb;
+    --primary-hover: #1d4ed8;
+    --primary-hover-color: #1d4ed8;
+    --button-text-color: #ffffff;
+    --success-color: #059669;
+    --danger-color: #dc2626;
+    --warning-color: #d97706;
+    --info-color: #0891b2;
+    --navbar-bg: linear-gradient(90deg, #2563eb, #1d4ed8);
+    --card-shadow: rgba(37, 99, 235, 0.1);
+    --hover-bg: rgba(37, 99, 235, 0.05);
+    --table-hover: #eff6ff;
+    --dropdown-shadow: rgba(37, 99, 235, 0.15);
+}
+
+[data-theme="dark"] {
+    /* Dark Theme - Blue & Black */
+    --bg-color: #000000;
+    --bg-primary: #0f172a;
+    --bg-secondary: #1e293b;
+    --bg-tertiary: #334155;
+    --secondary-bg: #1e293b;
+    --text-color: #e2e8f0;
+    --text-primary: #f8fafc;
+    --text-secondary: #cbd5e1;
+    --text-muted: #94a3b8;
+    --border-color: #475569;
+    --primary-color: #3b82f6;
+    --primary-hover: #2563eb;
+    --primary-hover-color: #2563eb;
+    --button-text-color: #ffffff;
+    --success-color: #10b981;
+    --danger-color: #ef4444;
+    --warning-color: #f59e0b;
+    --info-color: #06b6d4;
+    --navbar-bg: linear-gradient(90deg, #1e293b, #334155);
+    --card-shadow: rgba(0, 0, 0, 0.8);
+    --hover-bg: rgba(59, 130, 246, 0.1);
+    --table-hover: #1e293b;
+    --dropdown-shadow: rgba(0, 0, 0, 0.5);
+}
+
+/* Theme Toggle Button */
+.theme-toggle {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 1000;
+    background: var(--primary-color);
+    color: var(--button-text-color);
+    border: none;
+    border-radius: 50%;
+    width: 50px;
+    height: 50px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 10px var(--card-shadow);
+}
+
+.theme-toggle:hover {
+    background: var(--primary-hover);
+    transform: scale(1.1);
+}
+
+.theme-toggle i {
+    font-size: 1.2rem;
+}
+
+/* General Styles */
+body {
+    font-family: 'Roboto', sans-serif;
+    background-color: var(--bg-primary);
+    color: var(--text-primary);
+    transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* Ensure all text elements use theme colors */
+h1, h2, h3, h4, h5, h6 {
+    color: var(--text-primary);
+}
+
+p, span, div, label, li, a {
+    color: var(--text-primary);
+}
+
+/* Specific text elements */
+.text-primary {
+    color: var(--primary-color) !important;
+}
+
+.text-secondary {
+    color: var(--text-secondary) !important;
+}
+
+.text-muted {
+    color: var(--text-muted) !important;
+}
+
+.text-success {
+    color: var(--success-color) !important;
+}
+
+.text-danger {
+    color: var(--danger-color) !important;
+}
+
+.text-warning {
+    color: var(--warning-color) !important;
+}
+
+.text-info {
+    color: var(--info-color) !important;
+}
+
+/* Navbar */
+.navbar.bg-primary {
+    background: var(--navbar-bg) !important;
+}
+
+.navbar-brand, .navbar-nav .nav-link {
+    color: var(--button-text-color) !important;
+}
+
+.navbar-nav .nav-link {
+    padding: 10px 15px;
+    font-size: 1rem;
+    transition: background-color 0.3s, color 0.3s;
+}
+
+.navbar-nav .nav-link:hover {
+    background-color: var(--hover-bg);
+    border-radius: 5px;
+}
+
+.nav-link i {
+    margin-right: 8px;
+}
+
+.dropdown-menu {
+    background-color: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    box-shadow: 0 0.5rem 1rem var(--dropdown-shadow);
+    transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
+.dropdown-menu .dropdown-item {
+    color: var(--text-primary);
+}
+
+.dropdown-menu .dropdown-item:hover {
+    background-color: var(--hover-bg);
+    color: var(--primary-color);
+}
+
+/* Cards */
+.card {
+    background-color: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: 10px;
+    box-shadow: 0 4px 8px var(--card-shadow);
+    color: var(--text-primary);
+    transition: transform 0.2s, box-shadow 0.3s ease;
+}
+
+.card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 16px var(--card-shadow);
+}
+
+.card-header {
+    background-color: var(--bg-tertiary);
+    border-bottom: 1px solid var(--border-color);
+    color: var(--text-primary);
+}
+
+/* Tables */
+.table {
+    background-color: var(--bg-secondary);
+    color: var(--text-primary);
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.table th {
+    background-color: var(--primary-color);
+    color: var(--button-text-color);
+    border-color: var(--border-color);
+}
+
+.table td {
+    background-color: var(--bg-secondary);
+    border-color: var(--border-color);
+    color: var(--text-primary);
+}
+
+.table tbody tr {
+    background-color: var(--bg-secondary);
+    color: var(--text-primary);
+}
+
+.table-hover tbody tr:hover {
+    background-color: var(--table-hover);
+    color: var(--text-primary);
+}
+
+.table-striped tbody tr:nth-of-type(odd) {
+    background-color: var(--bg-tertiary);
+    color: var(--text-primary);
+}
+
+/* Forms */
+.form-control, .form-select {
+    background-color: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    color: var(--text-primary);
+    border-radius: 8px;
+    transition: all 0.3s ease;
+}
+
+.form-control:focus, .form-select:focus {
+    background-color: var(--bg-secondary);
+    border-color: var(--primary-color);
+    color: var(--text-primary);
+    box-shadow: 0 0 5px rgba(13, 110, 253, 0.25);
+}
+
+.form-label {
+    color: var(--text-primary);
+}
+
+textarea.form-control {
+    min-height: 150px;
+    resize: vertical;
+}
+
+/* Buttons */
+.btn-primary {
+    background-color: var(--primary-color);
+    border-color: var(--primary-color);
+    color: var(--button-text-color);
+    border-radius: 8px;
+    padding: 10px 20px;
+    transition: background-color 0.3s;
+}
+
+.btn-primary:hover {
+    background-color: var(--primary-hover);
+    border-color: var(--primary-hover);
+}
+
+.btn-success {
+    background-color: var(--success-color);
+    border-color: var(--success-color);
+}
+
+.btn-danger {
+    background-color: var(--danger-color);
+    border-color: var(--danger-color);
+}
+
+.btn-warning {
+    background-color: var(--warning-color);
+    border-color: var(--warning-color);
+}
+
+/* Alerts */
+.alert-success {
+    background-color: rgba(5, 150, 105, 0.1);
+    color: var(--success-color);
+    border: 1px solid var(--success-color);
+}
+
+.alert-error, .alert-danger {
+    background-color: rgba(220, 38, 38, 0.1);
+    color: var(--danger-color);
+    border: 1px solid var(--danger-color);
+}
+
+.alert-info {
+    background-color: rgba(8, 145, 178, 0.1);
+    color: var(--info-color);
+    border: 1px solid var(--info-color);
+}
+
+.alert-warning {
+    background-color: rgba(217, 119, 6, 0.1);
+    color: var(--warning-color);
+    border: 1px solid var(--warning-color);
+}
+
+.alert {
+    border-radius: 8px;
+    padding: 15px;
+    animation: fadeIn 0.5s ease-in;
+    color: var(--text-primary);
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(-10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* Badges */
+.badge.bg-success { 
+    background-color: var(--success-color) !important; 
+    color: var(--button-text-color) !important;
+}
+.badge.bg-danger { 
+    background-color: var(--danger-color) !important; 
+    color: var(--button-text-color) !important;
+}
+.badge.bg-warning { 
+    background-color: var(--warning-color) !important; 
+    color: var(--text-primary) !important;
+}
+.badge.bg-primary {
+    background-color: var(--primary-color) !important;
+    color: var(--button-text-color) !important;
+}
+.badge.bg-light {
+    background-color: var(--bg-tertiary) !important;
+    color: var(--text-primary) !important;
+    border: 1px solid var(--border-color);
+}
+.badge.bg-info {
+    background-color: var(--info-color) !important;
+    color: var(--button-text-color) !important;
+}
+.badge {
+    color: var(--button-text-color) !important;
+}
+
+/* Date Badge Styling */
+.badge.bg-light.text-dark {
+    background-color: var(--bg-tertiary) !important;
+    color: var(--text-primary) !important;
+    border: 1px solid var(--border-color) !important;
+}
+
+/* Attendance Status Labels */
+.attendance-present {
+    color: var(--success-color) !important;
+    font-weight: bold;
+}
+
+.attendance-absent {
+    color: var(--danger-color) !important;
+    font-weight: bold;
+}
+
+.attendance-late {
+    color: var(--warning-color) !important;
+    font-weight: bold;
+}
+
+.attendance-excused {
+    color: var(--info-color) !important;
+    font-weight: bold;
+}
+
+/* Footer */
+footer a.text-light {
+    transition: color 0.3s ease;
+    color: var(--text-secondary) !important;
+}
+
+footer {
+    background-color: var(--bg-secondary);
+    color: var(--text-primary);
+}
+
+/* Links */
+a {
+    color: var(--primary-color);
+    text-decoration: none;
+}
+
+a:hover {
+    color: var(--primary-hover);
+}
+
+/* List items */
+ul, ol, li {
+    color: var(--text-primary);
+}
+
+/* Ensure all Bootstrap text utilities work with theme */
+.text-dark {
+    color: var(--text-primary) !important;
+}
+
+.text-light {
+    color: var(--text-secondary) !important;
+}
+
+/* Card text elements */
+.card-title {
+    color: var(--text-primary);
+}
+
+.card-text {
+    color: var(--text-primary);
+}
+
+.card-subtitle {
+    color: var(--text-secondary);
+}
+
+/* Small text elements */
+small, .small {
+    color: var(--text-muted);
+}
+
+/* Strong and emphasis */
+strong, b {
+    color: var(--text-primary);
+}
+
+em, i {
+    color: var(--text-primary);
+}
+
+/* Dashboard Gradient Cards */
+.card[style*="gradient"] {
+    color: var(--button-text-color) !important;
+}
+
+.card[style*="gradient"] h2,
+.card[style*="gradient"] h4,
+.card[style*="gradient"] .card-body {
+    color: var(--button-text-color) !important;
+}
+
+/* Attendance Status Cards */
+.card-body .fa-percentage,
+.card-body .fa-calendar-check,
+.card-body .fa-times-circle {
+    color: var(--button-text-color) !important;
+}
+
+/* Dark theme overrides for better visibility */
+[data-theme="dark"] .editabletable th {
+    background-color: var(--primary-color);
+    color: var(--button-text-color);
+}
+
+[data-theme="dark"] .editabletable td {
+    background-color: var(--bg-secondary);
+    color: var(--text-primary);
+}
+
+[data-theme="dark"] .editabletable td[contenteditable="true"] {
+    background-color: var(--bg-primary);
+}
+
+[data-theme="dark"] .editabletable td[contenteditable="true"]:focus {
+    background-color: var(--bg-secondary);
+}
+
+/* Better spacing and visibility for status text */
+.status-present {
+    color: var(--success-color);
+    font-weight: bold;
+}
+
+.status-absent {
+    color: var(--danger-color);
+    font-weight: bold;
+}
+
+.status-late {
+    color: var(--warning-color);
+    font-weight: bold;
+}
+
+.status-excused {
+    color: var(--info-color);
+    font-weight: bold;
+}
+
+footer a.text-light:hover {
+    color: #17a2b8 !important;
+}
+
+footer p {
+    font-size: 1rem;
+}
+
+/* Responsive Adjustments */
+@media (max-width: 768px) {
+    .navbar-nav .nav-link {
+        font-size: 1.1rem;
+        padding: 15px;
+    }
+
+    .container.mt-5.pt-5 {
+        margin-top: 3rem !important;
+        padding-top: 1rem !important;
+    }
+
+    footer p {
+        font-size: 0.9rem;
+    }
+
+    .table-responsive {
+        font-size: 0.9rem;
+    }
+}
+
+
+/* Student Schedule & Timetable Styles */
+.timetable-container {
+    margin: 20px;
+    font-family: Arial, sans-serif;
+    background-color: var(--bg-primary);
+    color: var(--text-primary);
+    padding: 20px;
+    border-radius: 10px;
+}
+
+.timetable-title {
+    font-size: 1.5em;
+    text-align: center;
+    margin-bottom: 15px;
+    color: var(--text-primary);
+    font-weight: bold;
+}
+
+.course-selector {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 20px;
+}
+
+.course-btn {
+    padding: 8px 16px;
+    margin: 0 5px;
+    background-color: var(--secondary-bg);
+    border: 1px solid var(--border-color);
+    cursor: pointer;
+    color: var(--text-color);
+    border-radius: 4px;
+    transition: all 0.3s ease;
+}
+
+.course-btn:hover {
+    background-color: var(--hover-bg);
+}
+
+.active-course-btn {
+    background-color: var(--primary-color);
+    color: var(--button-text-color);
+}
+
+.editabletable {
+    width: 100%;
+    border-collapse: collapse;
+    background-color: var(--bg-secondary);
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 2px 4px var(--card-shadow);
+}
+
+.editabletable th, .editabletable td {
+    border: 1px solid var(--border-color);
+    padding: 12px 8px;
+    text-align: left;
+    white-space: pre-wrap;
+}
+
+.editabletable th {
+    background-color: var(--primary-color);
+    color: var(--button-text-color);
+    font-weight: bold;
+}
+
+.editabletable td {
+    background-color: var(--bg-secondary);
+    color: var(--text-primary);
+}
+
+.editabletable td[contenteditable="true"] {
+    background-color: var(--bg-color);
+    cursor: text;
+}
+
+.editabletable td[contenteditable="true"]:focus {
+    outline: 2px solid var(--primary-color);
+    background-color: var(--bg-secondary);
+}
+
+.submit-btn {
+    margin-top: 10px;
+    padding: 8px 16px;
+    background-color: var(--primary-color);
+    color: var(--button-text-color);
+    border: none;
+    cursor: pointer;
+    border-radius: 4px;
+    transition: background-color 0.3s ease;
+}
+
+.submit-btn:hover {
+    background-color: var(--primary-hover-color);
+}
+.timetable-container {
+    margin: 20px;
+    font-family: Arial, sans-serif;
+}
+
+.timetable-title {
+    font-size: 1.5em;
+    text-align: center;
+    margin-bottom: 15px;
+}
+
+.course-selector {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 20px;
+}
+
+.course-btn {
+    padding: 8px 16px;
+    margin: 0 5px;
+    background-color: #e0e0e0;
+    border: 1px solid #ccc;
+    cursor: pointer;
+}
+
+.active-course-btn {
+    background-color: #a0a0a0;
+    color: white;
+}
+
+.editabletable {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.editabletable th, .editabletable td {
+    border: 1px solid #ccc;
+    padding: 8px;
+    text-align: left;
+    white-space: pre-wrap;
+}
+
+.editabletable th {
+    background-color: #f0f0f0;
+    font-weight: bold;
+}
+
+.submit-btn {
+    margin-top: 10px;
+    padding: 8px 16px;
+    background-color: #007bff;
+    color: white;
+    border: none;
+    cursor: pointer;
+}
+
+.submit-btn:hover {
+    background-color: #0056b3;
+}
+
+/* Navbar Theme Toggle Button */
+.navbar #theme-toggle {
+    background: none !important;
+    border: none !important;
+    color: rgba(255, 255, 255, 0.8) !important;
+    padding: 8px 12px !important;
+    border-radius: 6px !important;
+    transition: all 0.3s ease !important;
+    cursor: pointer !important;
+}
+
+.navbar #theme-toggle:hover {
+    color: white !important;
+    background: rgba(255, 255, 255, 0.1) !important;
+    transform: scale(1.1);
+}
+
+.navbar #theme-toggle i {
+    font-size: 1.1rem;
+}
+
+/* Ensure button is clickable */
+#theme-toggle {
+    pointer-events: auto !important;
+    user-select: none !important;
+}

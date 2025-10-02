@@ -1,0 +1,153 @@
+{% extends 'base.html' %}
+{% load django_bootstrap5 %}
+{% load i18n %}
+{% load static %}
+
+{% block content %}
+<div class="container-fluid vh-100 d-flex align-items-center justify-content-center" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+    <div class="row w-100">
+        <div class="col-lg-4 col-md-6 col-sm-8 mx-auto">
+            <div class="card shadow-lg border-0 rounded-lg">
+                <div class="card-header bg-primary text-white text-center py-4">
+                    <div class="mb-3">
+                        <img src="{% static 'css/su_logo.png' %}" alt="SU Logo" class="mb-3" style="height: 60px;">
+                    </div>
+                    <h3 class="font-weight-light mb-0">
+                        {% get_current_language as LANGUAGE_CODE %}
+                        {% if LANGUAGE_CODE == 'ky' %}Салымбеков Университети
+                        {% elif LANGUAGE_CODE == 'ru' %}Университет Салымбекова  
+                        {% else %}Salymbekov University
+                        {% endif %}
+                    </h3>
+                    <p class="mb-0">
+                        {% if LANGUAGE_CODE == 'ky' %}Катышуу Системасы
+                        {% elif LANGUAGE_CODE == 'ru' %}Система Посещаемости
+                        {% else %}Attendance System
+                        {% endif %}
+                    </p>
+                </div>
+                
+                <div class="card-body p-4">
+                    <!-- Language Selector -->
+                    <div class="mb-4 text-center">
+                        <div class="btn-group" role="group" aria-label="Language selector">
+                            {% get_available_languages as languages %}
+                            {% get_current_language as LANGUAGE_CODE %}
+                            {% for lang_code, lang_name in languages %}
+                                <form method="post" action="{% url 'set_language' %}" style="display: inline;">
+                                    {% csrf_token %}
+                                    <input name="next" type="hidden" value="{{ request.get_full_path }}" />
+                                    <input name="language" type="hidden" value="{{ lang_code }}" />
+                                    <button type="submit" class="btn {% if lang_code == LANGUAGE_CODE %}btn-primary{% else %}btn-outline-primary{% endif %} btn-sm">
+                                        {% if lang_code == 'ky' %}🇰🇬 KY
+                                        {% elif lang_code == 'ru' %}🇷🇺 RU
+                                        {% elif lang_code == 'en' %}🇺🇸 EN
+                                        {% endif %}
+                                    </button>
+                                </form>
+                            {% endfor %}
+                        </div>
+                    </div>
+
+                    <h4 class="text-center mb-4">{% trans "Login" %}</h4>
+                    
+                    {% if messages %}
+                        {% for message in messages %}
+                            <div class="alert alert-{% if message.tags == 'error' %}danger{% else %}{{ message.tags }}{% endif %} alert-dismissible fade show" role="alert">
+                                {{ message }}
+                                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                            </div>
+                        {% endfor %}
+                    {% endif %}
+
+                    <form method="post" class="login-form">
+                        {% csrf_token %}
+                        <div class="mb-3">
+                            <label for="username" class="form-label">
+                                <i class="fas fa-user me-2"></i>{% trans "Username" %}
+                            </label>
+                            <input type="text" name="username" id="username" 
+                                   class="form-control form-control-lg" 
+                                   placeholder="{% trans 'Enter your username' %}" 
+                                   required autofocus>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="password" class="form-label">
+                                <i class="fas fa-lock me-2"></i>{% trans "Password" %}
+                            </label>
+                            <input type="password" name="password" id="password" 
+                                   class="form-control form-control-lg" 
+                                   placeholder="{% trans 'Enter your password' %}" 
+                                   required>
+                        </div>
+                        
+                        <div class="mb-3 form-check">
+                            <input type="checkbox" class="form-check-input" id="remember_me" name="remember_me">
+                            <label class="form-check-label" for="remember_me">
+                                {% trans "Remember me" %}
+                            </label>
+                        </div>
+                        
+                        <div class="d-grid mb-3">
+                            <button type="submit" class="btn btn-primary btn-lg">
+                                <i class="fas fa-sign-in-alt me-2"></i>{% trans "Login" %}
+                            </button>
+                        </div>
+                    </form>
+                    
+                    <hr class="my-4">
+                    
+                    <div class="text-center">
+                        <a href="{% url 'register' %}" class="btn btn-outline-primary btn-sm">
+                            <i class="fas fa-user-plus me-1"></i>{% trans "Create Account" %}
+                        </a>
+                        <a href="#" class="btn btn-link btn-sm ms-2">
+                            <i class="fas fa-question-circle me-1"></i>{% trans "Forgot Password?" %}
+                        </a>
+                    </div>
+                </div>
+                
+                <div class="card-footer text-center text-muted py-3">
+                    <small>
+                        © 2025 
+                        {% if LANGUAGE_CODE == 'ky' %}Салымбеков Университети
+                        {% elif LANGUAGE_CODE == 'ru' %}Университет Салымбекова
+                        {% else %}Salymbekov University
+                        {% endif %}
+                    </small>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.login-form input:focus {
+    border-color: #0d6efd;
+    box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.25);
+}
+
+.card {
+    transition: all 0.3s ease;
+}
+
+.card:hover {
+    transform: translateY(-5px);
+}
+
+.btn-group .btn {
+    border-radius: 0;
+}
+
+.btn-group .btn:first-child {
+    border-top-left-radius: 0.375rem;
+    border-bottom-left-radius: 0.375rem;
+}
+
+.btn-group .btn:last-child {
+    border-top-right-radius: 0.375rem;
+    border-bottom-right-radius: 0.375rem;
+}
+</style>
+{% endblock %}

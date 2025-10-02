@@ -1,0 +1,64 @@
+{% extends 'base.html' %}
+{% load django_bootstrap5 %}
+{% block title %}Бошотуу сурамы жөнөтүү{% endblock %}
+{% block content %}
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow">
+                <div class="card-header bg-primary text-white">
+                    <h3 class="mb-0">📝 Бошотуу сурамы жөнөтүү</h3>
+                </div>
+                <div class="card-body">
+                    <form method="POST">
+                        {% csrf_token %}
+                        <div class="row g-3">
+                            <div class="col-md-12">
+                                <label for="id_leave_type" class="form-label">Бошотуунун түрү</label>
+                                {{ form.leave_type }}
+                            </div>
+                            <div class="col-md-6">
+                                <label for="id_start_date" class="form-label">Башталуу күнү</label>
+                                {{ form.start_date }}
+                            </div>
+                            <div class="col-md-6">
+                                <label for="id_end_date" class="form-label">Аяктоо күнү</label>
+                                {{ form.end_date }}
+                            </div>
+                            <div class="col-md-12">
+                                <label for="id_reason" class="form-label">Себеби (толук маалымат берңиз)</label>
+                                {{ form.reason }}
+                            </div>
+                        </div>
+                        
+                        {% if form.errors %}
+                        <div class="alert alert-danger mt-3">
+                            {{ form.errors }}
+                        </div>
+                        {% endif %}
+                        
+                        <div class="d-flex justify-content-between mt-4">
+                            <a href="{% url 'my_leave_requests' %}" class="btn btn-secondary">
+                                ← Артка кайтуу
+                            </a>
+                            <button type="submit" class="btn btn-primary">
+                                ✉️ Сурам жөнөтүү
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.card {
+    border: none;
+    border-radius: 15px;
+}
+.card-header {
+    border-radius: 15px 15px 0 0 !important;
+}
+</style>
+{% endblock %}

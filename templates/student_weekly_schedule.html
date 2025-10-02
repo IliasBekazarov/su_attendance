@@ -1,0 +1,619 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load custom_filters %}
+
+{% block title %}Менин жумалык расписанием{% endblock %}
+
+{% block extra_css %}
+<style>
+.schedule-container {
+    padding: 2rem 0;
+}
+
+.schedule-header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 2.5rem 1.5rem;
+    border-radius: 20px;
+    text-align: center;
+    margin-bottom: 2.5rem;
+    box-shadow: 0 15px 40px rgba(102, 126, 234, 0.3);
+    position: relative;
+    overflow: hidden;
+}
+
+.schedule-header::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+    animation: pulse 4s ease-in-out infinite;
+}
+
+@keyframes pulse {
+    0%, 100% { opacity: 0.3; }
+    50% { opacity: 0.1; }
+}
+
+.schedule-header h2 {
+    font-size: 2rem;
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+    text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.schedule-header p {
+    font-size: 1.1rem;
+    opacity: 0.9;
+    margin: 0;
+}
+
+.schedule-table {
+    background: white;
+    border-radius: 20px;
+    box-shadow: 0 15px 35px rgba(0,0,0,0.1);
+    overflow: hidden;
+    border: none;
+    margin-bottom: 2rem;
+}
+
+.schedule-table th {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    font-weight: 700;
+    text-align: center;
+    padding: 1.2rem 0.8rem;
+    border: none;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    font-size: 0.9rem;
+}
+
+.schedule-table th.time-header {
+    background: linear-gradient(135deg, #2c3e50, #34495e);
+    color: white;
+    width: 140px;
+    font-size: 0.85rem;
+}
+
+.schedule-table td {
+    padding: 8px;
+    vertical-align: top;
+    height: 120px;
+    border: 1px solid #e9ecef;
+    background: #fafafa;
+    position: relative;
+}
+    border: 1px solid #f8f9fa;
+    padding: 0;
+    height: 120px;
+    vertical-align: top;
+    position: relative;
+}
+
+.schedule-table td.time-cell {
+    background: linear-gradient(135deg, #f1f3f4 0%, #e8eaf0 100%);
+    font-weight: 600;
+    text-align: center;
+    color: #2c3e50;
+    padding: 1rem 0.5rem;
+    border-right: 3px solid #667eea;
+}
+
+.time-cell strong {
+    display: block;
+    font-size: 0.9rem;
+    color: #667eea;
+    margin-bottom: 4px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.time-cell div:last-child {
+    font-size: 0.8rem;
+    color: #6c757d;
+    font-weight: 500;
+}
+
+.class-card {
+    height: 100%;
+    padding: 8px;
+    background: linear-gradient(135deg, #e3f2fd, #bbdefb);
+    border-left: 4px solid #2196f3;
+    position: relative;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.class-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(33, 150, 243, 0.3);
+}
+
+.class-subject {
+    font-weight: 700;
+    color: #1976d2;
+    font-size: 0.9rem;
+    margin-bottom: 4px;
+    line-height: 1.2;
+}
+
+.class-teacher {
+    font-size: 0.8rem;
+    color: #666;
+    margin-bottom: 6px;
+    line-height: 1.1;
+}
+
+.class-room {
+    font-size: 0.7rem;
+    color: #888;
+    margin-bottom: 8px;
+}
+
+.last-status-badge {
+    text-align: center;
+    margin-top: 8px;
+}
+
+.last-status-badge .badge {
+    font-size: 0.9rem;
+    padding: 6px 12px;
+    font-weight: 600;
+    border-radius: 20px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+/* Статус түстөрү */
+.bg-success { 
+    background: linear-gradient(135deg, #28a745, #20c997) !important; 
+    color: white;
+}
+.bg-danger { 
+    background: linear-gradient(135deg, #dc3545, #fd7e14) !important; 
+    color: white;
+}
+.bg-warning { 
+    background: linear-gradient(135deg, #ffc107, #fd7e14) !important; 
+    color: #212529;
+}
+.bg-secondary { 
+    background: linear-gradient(135deg, #6c757d, #adb5bd) !important; 
+    color: white;
+}
+
+/* Сабак карточкасынын жакшыртылган стили */
+.class-card {
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    border: 2px solid transparent;
+    border-radius: 12px;
+    padding: 12px 8px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    min-height: 100px;
+    position: relative;
+}
+
+.class-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(0,0,0,0.15);
+    border-color: #007bff;
+    background: linear-gradient(135deg, #ffffff 0%, #f1f3f4 100%);
+}
+
+.class-subject {
+    font-weight: 700;
+    font-size: 0.9rem;
+    color: #2c3e50;
+    margin-bottom: 6px;
+    line-height: 1.2;
+    text-transform: capitalize;
+}
+
+.class-teacher {
+    font-size: 0.8rem;
+    color: #6c757d;
+    margin-bottom: 4px;
+    font-weight: 500;
+}
+
+.class-room {
+    font-size: 0.75rem;
+    color: #6c757d;
+    margin-bottom: 8px;
+    font-weight: 500;
+}
+
+.empty-cell {
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    opacity: 0.6;
+    position: relative;
+}
+
+.empty-cell::after {
+    content: '🔒';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 1.5rem;
+    opacity: 0.3;
+}
+
+.legend {
+    background: white;
+    border-radius: 10px;
+    padding: 1rem;
+    margin: 1rem 0;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+}
+
+.legend-item {
+    display: inline-flex;
+    align-items: center;
+    margin-right: 1rem;
+    margin-bottom: 0.5rem;
+}
+
+.legend-color {
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    margin-right: 6px;
+}
+
+.stats-summary {
+    background: white;
+    border-radius: 15px;
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+}
+
+/* Легенда стилдери */
+.legend-status-item {
+    padding: 1rem;
+    transition: transform 0.3s ease;
+}
+
+.legend-status-item:hover {
+    transform: translateY(-5px);
+}
+
+.status-icon {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+}
+
+.bg-gradient-primary {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+/* Мобилдик жооп берүү */
+@media (max-width: 768px) {
+    .schedule-table {
+        font-size: 0.8rem;
+    }
+    
+    .schedule-table td {
+        height: 100px;
+    }
+    
+    .class-card {
+        padding: 6px;
+    }
+    
+    .class-subject {
+        font-size: 0.8rem;
+    }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container schedule-container">
+    <!-- Header -->
+    <div class="schedule-header">
+        <h1><i class="fas fa-calendar-week me-2"></i>Менин жумалык расписанием</h1>
+        <h3>{{ student.group.name }} - {{ student.name }}</h3>
+        <p class="mb-0">
+            <i class="fas fa-chart-line me-2"></i>
+            Катышуу статистикасы: {{ start_date|date:"j F" }} - {{ end_date|date:"j F Y" }}
+        </p>
+    </div>
+
+    <!-- Legend -->
+    <div class="legend">
+        <h5 class="mb-3"><i class="fas fa-info-circle me-2"></i>Белгилөөлөр:</h5>
+        <div class="row">
+            <div class="col-md-6">
+                <div class="legend-item">
+                    <div class="legend-color stat-present"></div>
+                    <span>Катышкан</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color stat-absent"></div>
+                    <span>Катышпagan</span>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="legend-item">
+                    <div class="legend-color stat-late"></div>
+                    <span>Кечикken</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color stat-excused"></div>
+                    <span>Кечирилген</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Schedule Table -->
+    <div class="table-responsive">
+        <table class="table schedule-table">
+            <thead>
+                <tr>
+                    <th class="time-header">Убакыт / Пара</th>
+                    {% for day_code, day_name in days %}
+                        <th>{{ day_name }}</th>
+                    {% endfor %}
+                </tr>
+            </thead>
+            <tbody>
+                {% for start_time, end_time, period_name in time_slots %}
+                <tr>
+                    <td class="time-cell">
+                        <div><strong>{{ period_name }}</strong></div>
+                        <div>{{ start_time }} - {{ end_time }}</div>
+                    </td>
+                    {% for day_code, day_name in days %}
+                        <td>
+                            {% with schedule_matrix|get_item:day_code|get_item:period_name as cell %}
+                                {% if cell.schedule_info %}
+                                    <div class="class-card" data-bs-toggle="modal" data-bs-target="#classModal{{ cell.schedule_info.schedule.id }}">
+                                        <div class="class-subject">
+                                            {{ cell.schedule_info.schedule.subject.subject_name }}
+                                        </div>
+                                        <div class="class-teacher">
+                                            <i class="fas fa-user me-1"></i>
+                                            {% if cell.schedule_info.schedule.teacher %}
+                                                {{ cell.schedule_info.schedule.teacher.name }}
+                                            {% else %}
+                                                {{ cell.schedule_info.schedule.subject.teacher.name }}
+                                            {% endif %}
+                                        </div>
+                                        {% if cell.schedule_info.schedule.room %}
+                                            <div class="class-room">
+                                                <i class="fas fa-door-open me-1"></i>{{ cell.schedule_info.schedule.room }}
+                                            </div>
+                                        {% endif %}
+                                        
+                                        <div class="attendance-stats">
+                                            <div class="attendance-row">
+                                                <div class="last-status-badge">
+                                                    <span class="badge bg-{{ cell.schedule_info.status_class }}">
+                                                        {{ cell.schedule_info.last_status }}
+                                                    </span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Modal for detailed info -->
+                                    <div class="modal fade" id="classModal{{ cell.schedule_info.schedule.id }}" tabindex="-1">
+                                        <div class="modal-dialog">
+                                            <div class="modal-content">
+                                                <div class="modal-header bg-primary text-white">
+                                                    <h5 class="modal-title">
+                                                        <i class="fas fa-book me-2"></i>
+                                                        {{ cell.schedule_info.schedule.subject.subject_name }}
+                                                    </h5>
+                                                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                                                </div>
+                                                <div class="modal-body text-center p-4">
+                                                    <div class="mb-4">
+                                                        <div class="status-display-large mb-3">
+                                                            <span class="badge bg-{{ cell.schedule_info.status_class }} fs-4 p-3 px-4">
+                                                                <i class="fas fa-{% if cell.schedule_info.status_class == 'success' %}check-circle{% elif cell.schedule_info.status_class == 'danger' %}times-circle{% elif cell.schedule_info.status_class == 'warning' %}clock{% else %}question-circle{% endif %} me-2"></i>
+                                                                {{ cell.schedule_info.last_status }}
+                                                            </span>
+                                                        </div>
+                                                        <p class="text-muted fs-6">Ушул аптадагы соңку катышуу статусу</p>
+                                                    </div>
+                                                    
+                                                    <div class="subject-info-card">
+                                                        <div class="card border-0 shadow-sm">
+                                                            <div class="card-body">
+                                                                <div class="row align-items-center">
+                                                                    <div class="col-2">
+                                                                        <i class="fas fa-book fa-2x text-primary"></i>
+                                                                    </div>
+                                                                    <div class="col-10 text-start">
+                                                                        <h5 class="card-title mb-2 text-primary">{{ cell.schedule_info.schedule.subject.subject_name }}</h5>
+                                                                        <p class="card-text mb-1">
+                                                                            <i class="fas fa-user me-2 text-secondary"></i>
+                                                                            <strong>Мугалим:</strong> 
+                                                                            {% if cell.schedule_info.schedule.teacher %}
+                                                                                {{ cell.schedule_info.schedule.teacher.name }}
+                                                                            {% else %}
+                                                                                {{ cell.schedule_info.schedule.subject.teacher.name }}
+                                                                            {% endif %}
+                                                                        </p>
+                                                                        {% if cell.schedule_info.schedule.room %}
+                                                                            <p class="card-text mb-0">
+                                                                                <i class="fas fa-door-open me-2 text-secondary"></i>
+                                                                                <strong>Бөлмө:</strong> {{ cell.schedule_info.schedule.room }}
+                                                                            </p>
+                                                                        {% endif %}
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                                            <div class="card border-warning">
+                                                                <div class="card-body text-center">
+                                                                    <h3 class="text-warning">{{ cell.schedule_info.stats.Late }}</h3>
+                                                                    <p class="mb-0">Кечикken</p>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                        <div class="col-6 mb-3">
+                                                            <div class="card border-info">
+                                                                <div class="card-body text-center">
+                                                                    <h3 class="text-info">{{ cell.schedule_info.stats.Excused }}</h3>
+                                                                    <p class="mb-0">Кечирилген</p>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    
+                                                    <div class="mt-3 p-3 bg-light rounded">
+                                                        <h6><i class="fas fa-info-circle me-2"></i>Сабак маалыматы:</h6>
+                                                        <p class="mb-1"><strong>Мугалим:</strong> 
+                                                            {% if cell.schedule_info.schedule.teacher %}
+                                                                {{ cell.schedule_info.schedule.teacher.name }}
+                                                            {% else %}
+                                                                {{ cell.schedule_info.schedule.subject.teacher.name }}
+                                                            {% endif %}
+                                                        </p>
+                                                        <p class="mb-1"><strong>Күн:</strong> {{ day_name }}</p>
+                                                        <p class="mb-1"><strong>Убакыт:</strong> {{ cell.time_range }}</p>
+                                                        {% if cell.schedule_info.schedule.room %}
+                                                            <p class="mb-0"><strong>Кабинет:</strong> {{ cell.schedule_info.schedule.room }}</p>
+                                                        {% endif %}
+                                                    </div>
+                                                </div>
+                                                <div class="modal-footer">
+                                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Жабуу</button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                {% else %}
+                                    <div class="empty-cell h-100"></div>
+                                {% endif %}
+                            {% endwith %}
+                        </td>
+                    {% endfor %}
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="row mt-4">
+        <div class="col-12 text-center">
+            <a href="{% url 'dashboard' %}" class="btn btn-primary me-3">
+                <i class="fas fa-home me-2"></i>Башкы бет
+            </a>
+            <a href="{% url 'submit_leave_request' %}" class="btn btn-warning me-3">
+                <i class="fas fa-file-alt me-2"></i>Арыз берүү
+            </a>
+            <a href="{% url 'my_leave_requests' %}" class="btn btn-info">
+                <i class="fas fa-list me-2"></i>Менин арыздарым
+            </a>
+        </div>
+    </div>
+
+    <!-- Жакшыртылган Легенда -->
+    <div class="row justify-content-center mt-4">
+        <div class="col-lg-8">
+            <div class="card border-0 shadow-lg">
+                <div class="card-header bg-gradient-primary text-white text-center py-3">
+                    <h5 class="mb-0">
+                        <i class="fas fa-info-circle me-2"></i>
+                        Катышуу статустарынын түшүндүрүүсү
+                    </h5>
+                </div>
+                <div class="card-body p-4">
+                    <div class="row text-center g-3">
+                        <div class="col-6 col-md-3">
+                            <div class="legend-status-item">
+                                <div class="status-icon bg-success text-white mb-2 mx-auto">
+                                    <i class="fas fa-check-circle fa-2x"></i>
+                                </div>
+                                <h6 class="fw-bold text-success">КАТЫШКАН</h6>
+                                <small class="text-muted">Сабакка келген</small>
+                            </div>
+                        </div>
+                        <div class="col-6 col-md-3">
+                            <div class="legend-status-item">
+                                <div class="status-icon bg-danger text-white mb-2 mx-auto">
+                                    <i class="fas fa-times-circle fa-2x"></i>
+                                </div>
+                                <h6 class="fw-bold text-danger">КАТЫШПАГАН</h6>
+                                <small class="text-muted">Сабакка келбеген</small>
+                            </div>
+                        </div>
+                        <div class="col-6 col-md-3">
+                            <div class="legend-status-item">
+                                <div class="status-icon bg-warning text-white mb-2 mx-auto">
+                                    <i class="fas fa-clock fa-2x"></i>
+                                </div>
+                                <h6 class="fw-bold text-warning">КЕЧИККЕН</h6>
+                                <small class="text-muted">Кечигип келген</small>
+                            </div>
+                        </div>
+                        <div class="col-6 col-md-3">
+                            <div class="legend-status-item">
+                                <div class="status-icon bg-secondary text-white mb-2 mx-auto">
+                                    <i class="fas fa-question-circle fa-2x"></i>
+                                </div>
+                                <h6 class="fw-bold text-secondary">БЕЛГИЛЕНЕ ЭЛЕК</h6>
+                                <small class="text-muted">Али белгиленген эмес</small>
+                            </div>
+                        </div>
+                    </div>
+                    <hr class="my-4">
+                    <div class="text-center">
+                        <div class="alert alert-info d-inline-block mb-0">
+                            <i class="fas fa-calendar-week me-2"></i>
+                            <strong>Маалымат:</strong> Көрсөтүлгөн маалыматтар <span class="fw-bold text-primary">ушул аптанын</span> ичиндеги соңку катышуу статустары
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Template filter for getting dictionary items
+document.addEventListener('DOMContentLoaded', function() {
+    // Add hover effects
+    const classCells = document.querySelectorAll('.class-card');
+    classCells.forEach(function(cell) {
+        cell.addEventListener('mouseenter', function() {
+            this.style.transform = 'translateY(-2px)';
+        });
+        
+        cell.addEventListener('mouseleave', function() {
+            this.style.transform = 'translateY(0)';
+        });
+    });
+});
+</script>
+{% endblock %}

@@ -1,0 +1,1579 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load i18n %}
+
+{% block title %}📅 Unified Schedule - Расписание{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* === БАЗАЛЫК СТИЛДЕР === */
+    * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+    }
+
+    .unified-schedule-container {
+        max-width: 1400px;
+        margin: 0 auto;
+        padding: 20px;
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
+    }
+
+    /* === ЗАГОЛОВОК === */
+    .schedule-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 30px;
+        border-radius: 12px;
+        margin-bottom: 30px;
+        text-align: center;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+    }
+
+    .schedule-header h1 {
+        font-size: 2.2rem;
+        font-weight: 700;
+        margin-bottom: 10px;
+    }
+
+    .schedule-subtitle {
+        font-size: 1.1rem;
+        opacity: 0.9;
+        font-weight: 400;
+    }
+
+    .user-role-badge {
+        display: inline-block;
+        background: rgba(255, 255, 255, 0.2);
+        padding: 8px 16px;
+        border-radius: 20px;
+        margin-top: 10px;
+        font-size: 0.9rem;
+        font-weight: 500;
+    }
+
+    /* === ФИЛЬТРЛЕР === */
+    .filters-section {
+        background: white;
+        padding: 25px;
+        border-radius: 12px;
+        margin-bottom: 30px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+        border: 1px solid #e2e8f0;
+    }
+
+    .filters-title {
+        color: #2d3748;
+        font-size: 1.4rem;
+        font-weight: 600;
+        margin-bottom: 20px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .filter-step {
+        margin-bottom: 25px;
+    }
+
+    .filter-label {
+        color: #4a5568;
+        font-size: 1rem;
+        font-weight: 600;
+        margin-bottom: 10px;
+        display: block;
+    }
+
+    .course-buttons, .group-buttons {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+    }
+
+    .course-btn, .group-btn {
+        background: #f7fafc;
+        color: #2d3748;
+        border: 2px solid #e2e8f0;
+        padding: 12px 20px;
+        border-radius: 8px;
+        cursor: pointer;
+        font-size: 0.9rem;
+        font-weight: 500;
+        transition: all 0.3s ease;
+        text-decoration: none;
+        display: inline-block;
+    }
+
+    .course-btn:hover, .group-btn:hover {
+        border-color: #667eea;
+        background: #edf2f7;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(102, 126, 234, 0.15);
+    }
+
+    .course-btn.active, .group-btn.active {
+        background: #667eea;
+        color: white;
+        border-color: #667eea;
+    }
+
+    .group-section {
+        display: none;
+    }
+
+    /* === РАСПИСАНИЕ ТАБЛИЦАСЫ === */
+    .schedule-section {
+        background: white;
+        border-radius: 12px;
+        padding: 25px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+        border: 1px solid #e2e8f0;
+        margin-bottom: 30px;
+    }
+
+    .schedule-title {
+        color: #2d3748;
+        font-size: 1.4rem;
+        font-weight: 600;
+        margin-bottom: 20px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .schedule-grid {
+        display: grid;
+        grid-template-columns: 120px repeat(7, 1fr);
+        gap: 1px;
+        background: #e2e8f0;
+        border-radius: 8px;
+        overflow: hidden;
+        min-width: 800px;
+    }
+
+    .schedule-cell {
+        background: white;
+        padding: 12px 8px;
+        text-align: center;
+        min-height: 70px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-direction: column;
+        position: relative;
+        transition: all 0.2s ease;
+    }
+
+    .header-cell {
+        background: #667eea;
+        color: white;
+        font-weight: 700;
+        font-size: 0.9rem;
+    }
+
+    .time-cell {
+        background: #f8fafc;
+        font-weight: 700;
+        color: #2d3748;
+        font-size: 0.75rem;
+        line-height: 1.2;
+    }
+
+    .lesson-cell {
+        font-size: 0.8rem;
+        padding: 8px 6px;
+        background: #f7fafc;
+        border-left: 3px solid #667eea;
+        cursor: pointer;
+        position: relative;
+    }
+
+    .lesson-cell:hover {
+        background: #edf2f7;
+        transform: scale(1.02);
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    .lesson-title {
+        font-weight: 700;
+        color: #2d3748;
+        margin-bottom: 4px;
+        line-height: 1.1;
+    }
+
+    .lesson-teacher {
+        font-size: 0.7rem;
+        color: #667eea;
+        font-weight: 500;
+        margin-bottom: 3px;
+    }
+
+    .lesson-room {
+        font-size: 0.65rem;
+        color: #718096;
+        background: #e2e8f0;
+        padding: 2px 6px;
+        border-radius: 4px;
+        display: inline-block;
+    }
+
+    .empty-cell {
+        background: #f8fafc;
+        color: #a0aec0;
+        font-style: italic;
+        cursor: pointer;
+        border: 2px dashed #cbd5e0;
+        font-size: 0.8rem;
+    }
+
+    .empty-cell:hover {
+        background: #edf2f7;
+        border-color: #667eea;
+        color: #667eea;
+    }
+
+    /* === ИНТЕРАКТИВДҮҮ БАСКЫЧТАР === */
+    .action-btn {
+        position: absolute;
+        border: none;
+        width: 20px;
+        height: 20px;
+        border-radius: 50%;
+        cursor: pointer;
+        opacity: 0;
+        transition: all 0.3s ease;
+        font-size: 11px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-weight: bold;
+    }
+
+    .lesson-cell:hover .action-btn,
+    .empty-cell:hover .action-btn {
+        opacity: 1;
+    }
+
+    .add-btn {
+        top: 4px;
+        right: 4px;
+        background: #48bb78;
+    }
+
+    .edit-btn {
+        top: 4px;
+        right: 4px;
+        background: #ed8936;
+    }
+
+    .attendance-btn {
+        bottom: 4px;
+        left: 4px;
+        background: #667eea;
+    }
+
+    .delete-btn {
+        top: 4px;
+        left: 4px;
+        background: #f56565;
+    }
+
+    .add-btn:hover { background: #38a169; }
+    .edit-btn:hover { background: #dd6b20; }
+    .attendance-btn:hover { background: #5a67d8; }
+    .delete-btn:hover { background: #e53e3e; }
+
+    /* === МОДАЛДАР === */
+    .modal {
+        display: none;
+        position: fixed;
+        z-index: 1000;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.6);
+        backdrop-filter: blur(5px);
+    }
+
+    .modal-content {
+        background: white;
+        margin: 5% auto;
+        padding: 25px;
+        border-radius: 12px;
+        width: 90%;
+        max-width: 500px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        animation: modalSlideIn 0.3s ease-out;
+    }
+
+    @keyframes modalSlideIn {
+        from {
+            opacity: 0;
+            transform: translateY(-50px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .modal-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 20px;
+        padding-bottom: 15px;
+        border-bottom: 2px solid #e2e8f0;
+    }
+
+    .modal-title {
+        font-size: 1.3rem;
+        font-weight: 700;
+        color: #2d3748;
+    }
+
+    .close-btn {
+        color: #a0aec0;
+        font-size: 24px;
+        font-weight: bold;
+        cursor: pointer;
+        border: none;
+        background: none;
+        transition: color 0.3s ease;
+        padding: 5px;
+    }
+
+    .close-btn:hover {
+        color: #2d3748;
+    }
+
+    .form-group {
+        margin-bottom: 20px;
+    }
+
+    .form-label {
+        display: block;
+        margin-bottom: 8px;
+        font-weight: 600;
+        color: #2d3748;
+        font-size: 0.9rem;
+    }
+
+    .form-input, .form-select {
+        width: 100%;
+        padding: 12px;
+        border: 2px solid #e2e8f0;
+        border-radius: 8px;
+        font-size: 0.9rem;
+        transition: border-color 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    .form-input:focus, .form-select:focus {
+        outline: none;
+        border-color: #667eea;
+        box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+    }
+
+    .modal-buttons {
+        display: flex;
+        gap: 10px;
+        justify-content: flex-end;
+        margin-top: 25px;
+    }
+
+    .modal-btn {
+        padding: 12px 20px;
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
+        font-size: 0.9rem;
+        font-weight: 600;
+        transition: all 0.3s ease;
+    }
+
+    .btn-primary {
+        background: #667eea;
+        color: white;
+    }
+
+    .btn-primary:hover {
+        background: #5a67d8;
+        transform: translateY(-2px);
+    }
+
+    .btn-danger {
+        background: #f56565;
+        color: white;
+    }
+
+    .btn-danger:hover {
+        background: #e53e3e;
+        transform: translateY(-2px);
+    }
+
+    .btn-secondary {
+        background: #e2e8f0;
+        color: #4a5568;
+    }
+
+    .btn-secondary:hover {
+        background: #cbd5e0;
+    }
+
+    /* === ATTENDANCE MODAL === */
+    .attendance-modal-content {
+        max-width: 700px;
+        max-height: 85vh;
+        overflow-y: auto;
+    }
+
+    .lesson-info {
+        background: #f7fafc;
+        padding: 15px;
+        border-radius: 8px;
+        margin-bottom: 20px;
+        border-left: 4px solid #667eea;
+    }
+
+    .lesson-info h3 {
+        color: #2d3748;
+        margin-bottom: 10px;
+        font-size: 1.1rem;
+    }
+
+    .lesson-info p {
+        margin: 6px 0;
+        color: #4a5568;
+        font-size: 0.9rem;
+    }
+
+    .students-list {
+        max-height: 400px;
+        overflow-y: auto;
+    }
+
+    .student-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 15px;
+        background: #f8fafc;
+        margin-bottom: 10px;
+        border-radius: 8px;
+        border: 1px solid #e2e8f0;
+        transition: all 0.2s ease;
+    }
+
+    .student-item:hover {
+        background: #edf2f7;
+        border-color: #cbd5e0;
+    }
+
+    .student-name {
+        font-weight: 600;
+        color: #2d3748;
+        flex: 1;
+        font-size: 0.9rem;
+    }
+
+    .attendance-buttons {
+        display: flex;
+        gap: 8px;
+    }
+
+    .status-btn {
+        padding: 8px 12px;
+        border: none;
+        border-radius: 6px;
+        cursor: pointer;
+        font-size: 0.8rem;
+        font-weight: 600;
+        transition: all 0.3s ease;
+        border: 2px solid transparent;
+    }
+
+    .status-btn.present {
+        background: #48bb78;
+        color: white;
+    }
+
+    .status-btn.present.active {
+        background: #38a169;
+        border-color: #2f855a;
+        box-shadow: 0 0 0 2px rgba(72, 187, 120, 0.2);
+    }
+
+    .status-btn.late {
+        background: #ed8936;
+        color: white;
+    }
+
+    .status-btn.late.active {
+        background: #dd6b20;
+        border-color: #c05621;
+        box-shadow: 0 0 0 2px rgba(237, 137, 54, 0.2);
+    }
+
+    .status-btn.absent {
+        background: #f56565;
+        color: white;
+    }
+
+    .status-btn.absent.active {
+        background: #e53e3e;
+        border-color: #c53030;
+        box-shadow: 0 0 0 2px rgba(245, 101, 101, 0.2);
+    }
+
+    .attendance-summary {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 15px;
+        margin: 20px 0;
+        padding: 20px;
+        background: #f7fafc;
+        border-radius: 8px;
+    }
+
+    .summary-item {
+        text-align: center;
+        padding: 15px;
+        background: white;
+        border-radius: 8px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    }
+
+    .summary-number {
+        font-size: 2rem;
+        font-weight: 800;
+        margin-bottom: 5px;
+    }
+
+    .summary-label {
+        font-size: 0.8rem;
+        color: #4a5568;
+        font-weight: 600;
+    }
+
+    .summary-present .summary-number { color: #48bb78; }
+    .summary-late .summary-number { color: #ed8936; }
+    .summary-absent .summary-number { color: #f56565; }
+
+    /* === LOADING STATES === */
+    .loading {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 40px;
+        color: #667eea;
+        font-size: 1.1rem;
+    }
+
+    .spinner {
+        border: 3px solid #e2e8f0;
+        border-top: 3px solid #667eea;
+        border-radius: 50%;
+        width: 30px;
+        height: 30px;
+        animation: spin 1s linear infinite;
+        margin-right: 10px;
+    }
+
+    @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+    }
+
+    /* === SUCCESS/ERROR MESSAGES === */
+    .alert {
+        padding: 15px 20px;
+        border-radius: 8px;
+        margin-bottom: 20px;
+        font-weight: 500;
+        position: relative;
+    }
+
+    .alert-success {
+        background: #c6f6d5;
+        color: #22543d;
+        border-left: 4px solid #48bb78;
+    }
+
+    .alert-error {
+        background: #fed7d7;
+        color: #742a2a;
+        border-left: 4px solid #f56565;
+    }
+
+    /* === АДАПТИВДҮҮ ДИЗАЙН === */
+    @media (max-width: 768px) {
+        .unified-schedule-container {
+            padding: 10px;
+        }
+        
+        .schedule-header {
+            padding: 20px 15px;
+        }
+        
+        .schedule-header h1 {
+            font-size: 1.8rem;
+        }
+        
+        .filters-section, .schedule-section {
+            padding: 15px;
+        }
+        
+        .course-buttons, .group-buttons {
+            justify-content: center;
+        }
+        
+        .schedule-grid {
+            grid-template-columns: 100px repeat(7, 1fr);
+            min-width: 600px;
+        }
+        
+        .schedule-cell {
+            min-height: 60px;
+            padding: 8px 4px;
+            font-size: 0.7rem;
+        }
+        
+        .modal-content {
+            width: 95%;
+            margin: 10% auto;
+            padding: 20px;
+        }
+        
+        .attendance-summary {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    .hidden {
+        display: none !important;
+    }
+
+    .fade-in {
+        animation: fadeIn 0.5s ease-out;
+    }
+
+    @keyframes fadeIn {
+        from {
+            opacity: 0;
+            transform: translateY(10px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="unified-schedule-container">
+    <!-- Заголовок -->
+    <div class="schedule-header">
+        <h1>🎓 Unified Schedule System</h1>
+        <div class="schedule-subtitle">Интерактивдүү расписание башкаруу системасы</div>
+        <div class="user-role-badge">
+            {{ user_profile.get_role_display }} - {{ user.get_full_name|default:user.username }}
+        </div>
+    </div>
+
+    <!-- Фильтрлер -->
+    <div class="filters-section">
+        <h2 class="filters-title">🔍 Фильтрлер</h2>
+        
+        {% if not is_restricted_view %}
+        <!-- Курс тандоо (Админ/Менеджер/Мугалим үчүн) -->
+        <div class="filter-step">
+            <label class="filter-label">1️⃣ Курсту тандаңыз:</label>
+            <div class="course-buttons" id="courseButtons">
+                {% for course in courses %}
+                <button class="course-btn" data-course-id="{{ course.id }}" onclick="selectCourse({{ course.id }})">
+                    📚 {{ course.name }} ({{ course.year }}-курс)
+                </button>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- Группа тандоо -->
+        <div class="filter-step group-section" id="groupSection">
+            <label class="filter-label">2️⃣ Группаны тандаңыз:</label>
+            <div class="group-buttons" id="groupButtons">
+                <!-- AJAX аркылуу жүктөлөт -->
+            </div>
+        </div>
+        {% else %}
+        <!-- Чектелген көрүү (Студент/Ата-эне) -->
+        <div class="alert alert-info">
+            <strong>ℹ️ Маалымат:</strong> 
+            {% if user_role == 'STUDENT' %}
+                Сиз өзүңүздүн группаңыздын расписаниесин гана көрө аласыз.
+                {% if user_group %}
+                    <br><strong>Сиздин группа:</strong> {{ user_group.name }} ({{ user_course.name }})
+                {% endif %}
+            {% elif user_role == 'PARENT' %}
+                Сиз өзүңүздүн балдарыңыздын группаларынын расписаниесин көрө аласыз.
+            {% endif %}
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Расписание таблицасы -->
+    <div class="schedule-section" id="scheduleSection" style="display: none;">
+        <h2 class="schedule-title" id="scheduleTitle">📅 Расписание</h2>
+        
+        <div id="scheduleContent">
+            <div class="loading" id="loadingIndicator">
+                <div class="spinner"></div>
+                Маалыматтар жүктөлүүдө...
+            </div>
+            
+            <!-- Debug маалыматы -->
+            <div id="debugInfo" style="background: #f0f0f0; padding: 10px; margin: 10px 0; border-radius: 5px; font-family: monospace; font-size: 12px;">
+                Debug: Waiting for data...
+            </div>
+            
+            <!-- Test таблица -->
+            <div id="testSchedule" style="display: none;">
+                <h3>Test Schedule Table</h3>
+                <table border="1" style="width: 100%; border-collapse: collapse;">
+                    <tr>
+                        <th>Убакыт</th>
+                        <th>Дүйшөмбү</th>
+                        <th>Шейшемби</th>
+                        <th>Шаршемби</th>
+                    </tr>
+                    <tr>
+                        <td>09:00-09:50</td>
+                        <td>Математика</td>
+                        <td>Физика</td>
+                        <td>Химия</td>
+                    </tr>
+                    <tr>
+                        <td>10:00-10:50</td>
+                        <td>Python</td>
+                        <td>Web</td>
+                        <td>Database</td>
+                    </tr>
+                </table>
+                <button onclick="document.getElementById('testSchedule').style.display='none'">Жашыруу</button>
+            </div>
+            
+            <button onclick="document.getElementById('testSchedule').style.display='block'" style="margin: 10px;">Test таблица көрсөтүү</button>
+        </div>
+    </div>
+</div>
+
+<!-- Сабак кошуу/түзөтүү модалы -->
+<div id="lessonModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3 class="modal-title" id="lessonModalTitle">📚 Сабак кошуу</h3>
+            <button class="close-btn" onclick="closeLessonModal()">&times;</button>
+        </div>
+        <form id="lessonForm">
+            <div class="form-group">
+                <label class="form-label" for="subjectSelect">📚 Сабак:</label>
+                <select id="subjectSelect" class="form-select" required>
+                    <option value="">Сабакты тандаңыз...</option>
+                    {% for subject in subjects %}
+                    <option value="{{ subject.id }}">{{ subject.subject_name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="form-group">
+                <label class="form-label" for="teacherSelect">👨‍🏫 Мугалим:</label>
+                <select id="teacherSelect" class="form-select">
+                    <option value="">Мугалимди тандаңыз...</option>
+                    {% for teacher in teachers %}
+                    <option value="{{ teacher.id }}">{{ teacher.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="form-group">
+                <label class="form-label" for="roomInput">📍 Кабинет:</label>
+                <input type="text" id="roomInput" class="form-input" placeholder="304, Lab-1, Ауд-205...">
+            </div>
+            <div class="modal-buttons">
+                <button type="button" class="modal-btn btn-secondary" onclick="closeLessonModal()">❌ Жокко чыгаруу</button>
+                <button type="button" class="modal-btn btn-danger" id="deleteLessonBtn" onclick="deleteLesson()" style="display: none;">🗑️ Өчүрүү</button>
+                <button type="submit" class="modal-btn btn-primary">💾 Сактоо</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Келүү-кетүү белгилөө модалы -->
+<div id="attendanceModal" class="modal">
+    <div class="modal-content attendance-modal-content">
+        <div class="modal-header">
+            <h3 class="modal-title">📋 Келүү-кетүү белгилөө</h3>
+            <button class="close-btn" onclick="closeAttendanceModal()">&times;</button>
+        </div>
+        
+        <div id="lessonInfo" class="lesson-info">
+            <!-- Сабак маалыматы AJAX аркылуу жүктөлөт -->
+        </div>
+        
+        <div class="students-list" id="studentsList">
+            <!-- Студенттер тизмеси AJAX аркылуу жүктөлөт -->
+        </div>
+        
+        <div class="attendance-summary" id="attendanceSummary">
+            <div class="summary-item summary-present">
+                <div class="summary-number" id="presentCount">0</div>
+                <div class="summary-label">✅ Келди</div>
+            </div>
+            <div class="summary-item summary-late">
+                <div class="summary-number" id="lateCount">0</div>
+                <div class="summary-label">⏰ Кечикти</div>
+            </div>
+            <div class="summary-item summary-absent">
+                <div class="summary-number" id="absentCount">0</div>
+                <div class="summary-label">❌ Жок</div>
+            </div>
+        </div>
+        
+        <div class="modal-buttons">
+            <button type="button" class="modal-btn btn-secondary" onclick="closeAttendanceModal()">❌ Жабуу</button>
+            <button type="button" class="modal-btn btn-primary" onclick="saveAttendance()">💾 Сактоо</button>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// === ГЛОБАЛДЫК ӨЗГӨРМӨЛӨР ===
+let currentCourseId = null;
+let currentGroupId = null;
+let currentLessonId = null;
+let currentAttendanceData = {};
+let scheduleData = {};
+let timeSlots = [];
+let userPermissions = {};
+
+// === БАШТАЛУУ ===
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('DOM loaded. User role: {{ user_role }}, Is restricted: {{ is_restricted_view }}');
+    
+    {% if is_restricted_view %}
+        {% if user_role == 'STUDENT' and user_group %}
+            console.log('Loading schedule for student group: {{ user_group.id }}');
+            // Студент үчүн расписание бөлүмүн көрсөтүп, дароо жүктөөлү
+            const scheduleSection = document.getElementById('scheduleSection');
+            if (scheduleSection) {
+                scheduleSection.style.display = 'block';
+            }
+            // Студент үчүн өзүнүн группасын көрсөтүү
+            loadScheduleForGroup({{ user_group.id }});
+        {% elif user_role == 'PARENT' %}
+            console.log('Parent view not implemented yet');
+            // Ата-эне үчүн балдарынын группаларын көрсөтүү
+            // TODO: Implement parent view
+        {% endif %}
+    {% else %}
+        console.log('Full access mode for admin/manager/teacher');
+    {% endif %}
+});
+
+// === КУРС ТАНДОО ===
+function selectCourse(courseId) {
+    currentCourseId = courseId;
+    
+    // Эгерде мурунку группа тандалган болсо, аны сактап калабыз
+    const previousGroupId = currentGroupId;
+    
+    // Активдүү курс баскычын белгилөө
+    document.querySelectorAll('.course-btn').forEach(btn => {
+        btn.classList.remove('active');
+    });
+    document.querySelector(`[data-course-id="${courseId}"]`).classList.add('active');
+    
+    // Мурунку группа активации алып салуу
+    document.querySelectorAll('.group-btn').forEach(btn => {
+        btn.classList.remove('active');
+    });
+    
+    // Расписание бөлүмүн жашыруу (жаңы группа тандалмайынча)
+    const scheduleSection = document.getElementById('scheduleSection');
+    if (scheduleSection) {
+        scheduleSection.style.display = 'none';
+    }
+    
+    // currentGroupId'ни аныксыз кылуу
+    currentGroupId = null;
+    
+    // Чектелген көрүү үчүн (студент) группаларды жүктөбөйбүз
+    const isRestrictedView = {% if is_restricted_view %}true{% else %}false{% endif %};
+    
+    if (!isRestrictedView) {
+        // Группаларды жүктөө
+        loadGroupsForCourse(courseId, previousGroupId);
+    }
+}
+
+// === ГРУППАЛАРДЫ ЖҮКТӨӨ ===
+function loadGroupsForCourse(courseId, autoSelectGroupId = null) {
+    console.log(`loadGroupsForCourse called: courseId=${courseId}, autoSelectGroupId=${autoSelectGroupId}`);
+    
+    // Эгерде чектелген көрүү болсо (студент), группалар секциясы жок болот
+    const isRestrictedView = {% if is_restricted_view %}true{% else %}false{% endif %};
+    
+    if (isRestrictedView) {
+        console.log('Restricted view - skipping group loading');
+        return;
+    }
+    
+    fetch(`{% url 'get_groups_for_course' %}?course_id=${courseId}`)
+        .then(response => {
+            console.log(`API response status: ${response.status}`);
+            return response.json();
+        })
+        .then(data => {
+            console.log('API response data:', data);
+            
+            if (data.groups) {
+                displayGroups(data.groups);
+                
+                // groupSection элементин текшерүү
+                const groupSection = document.getElementById('groupSection');
+                if (groupSection) {
+                    groupSection.style.display = 'block';
+                } else {
+                    console.warn('groupSection element not found');
+                }
+                
+                // Автоматтык группа тандоо логикасы
+                if (autoSelectGroupId) {
+                    // Мурунку группаны табууга аракет
+                    const groupExists = data.groups.find(g => g.id == autoSelectGroupId);
+                    if (groupExists) {
+                        console.log(`Auto-selecting existing group: ${autoSelectGroupId}`);
+                        selectGroup(autoSelectGroupId);
+                        return;
+                    }
+                }
+                
+                // Эгерде мурунку группа жок болсо же биринчи жолу тандалса, биринчи группаны тандоо
+                if (data.groups.length > 0) {
+                    console.log(`Auto-selecting first group: ${data.groups[0].id}`);
+                    selectGroup(data.groups[0].id);
+                }
+            } else {
+                console.error('No groups in API response');
+                showError('Группалар жүктөлгөн жок');
+            }
+        })
+        .catch(error => {
+            console.error('Error loading groups:', error);
+            showError('Группаларды жүктөөдө ката кетти: ' + error.message);
+        });
+}
+
+// === ГРУППАЛАРДЫ КӨРСӨТҮҮ ===
+function displayGroups(groups) {
+    console.log('displayGroups called with:', groups); // Debug логу
+    
+    const groupButtons = document.getElementById('groupButtons');
+    if (!groupButtons) {
+        console.error('groupButtons element not found - this is normal for restricted view (students)');
+        return;
+    }
+    
+    groupButtons.innerHTML = '';
+    
+    groups.forEach(group => {
+        const button = document.createElement('button');
+        button.className = 'group-btn';
+        button.setAttribute('data-group-id', group.id);
+        button.onclick = () => selectGroup(group.id);
+        
+        const studentCount = group.student_count !== undefined ? group.student_count : 0;
+        button.innerHTML = `👥 ${group.name} <small>(${studentCount} студент)</small>`;
+        groupButtons.appendChild(button);
+    });
+    
+    console.log(`displayGroups: Added ${groups.length} group buttons`); // Debug логу
+}
+
+// === ГРУППА ТАНДОО ===
+function selectGroup(groupId) {
+    currentGroupId = groupId;
+    
+    // Активдүү группа баскычын белгилөө
+    document.querySelectorAll('.group-btn').forEach(btn => {
+        btn.classList.remove('active');
+    });
+    document.querySelector(`[data-group-id="${groupId}"]`).classList.add('active');
+    
+    // Расписание бөлүмүн көрсөтүү
+    const scheduleSection = document.getElementById('scheduleSection');
+    if (scheduleSection) {
+        scheduleSection.style.display = 'block';
+    } else {
+        console.log('scheduleSection element not found - this is normal for restricted view');
+    }
+    
+    // Расписаниени жүктөө
+    loadScheduleForGroup(groupId);
+}
+
+// === РАСПИСАНИЕНИ ЖҮКТӨӨ ===
+function loadScheduleForGroup(groupId) {
+    console.log(`loadScheduleForGroup called: groupId=${groupId}, currentCourseId=${currentCourseId}`);
+    
+    const loadingIndicator = document.getElementById('loadingIndicator');
+    const scheduleContent = document.getElementById('scheduleContent');
+    
+    if (loadingIndicator) {
+        loadingIndicator.style.display = 'flex';
+    }
+    
+    let url = `{% url 'get_schedule_data' %}?group_id=${groupId}`;
+    if (currentCourseId) {
+        url += `&course_id=${currentCourseId}`;
+    }
+    
+    console.log(`API URL: ${url}`);
+    
+    fetch(url)
+        .then(response => response.json())
+        .then(data => {
+            console.log('API Response:', data); // Debug логу
+            if (data.schedule_data) {
+                scheduleData = data.schedule_data;
+                timeSlots = data.time_slots;
+                userPermissions = data.user_permissions;
+                console.log('Schedule Data:', scheduleData); // Debug логу
+                console.log('Time Slots:', timeSlots); // Debug логу
+                displaySchedule(data);
+                if (loadingIndicator) {
+                    loadingIndicator.style.display = 'none';
+                }
+            } else {
+                if (loadingIndicator) {
+                    loadingIndicator.style.display = 'none';
+                }
+                console.error('No schedule_data in API response:', data);
+                showError(data.error || 'Расписание жүктөлгөн жок');
+            }
+        })
+        .catch(error => {
+            console.error('Error loading schedule:', error);
+            if (loadingIndicator) {
+                loadingIndicator.style.display = 'none';
+            }
+            showError('Расписаниени жүктөөдө ката кетти: ' + error.message);
+        });
+}
+
+// === РАСПИСАНИЕНИ КӨРСӨТҮҮ ===
+function displaySchedule(data) {
+    console.log('displaySchedule called with:', data); // Debug
+    
+    const scheduleContent = document.getElementById('scheduleContent');
+    const debugInfo = document.getElementById('debugInfo');
+    
+    // scheduleContent элементин текшерүү
+    if (!scheduleContent) {
+        console.error('scheduleContent element not found');
+        showError('Расписание блогу табылган жок');
+        return;
+    }
+    
+    // Данныены текшерүү
+    if (!data) {
+        console.error('Data is null or undefined');
+        showError('Маалымат келген жок');
+        return;
+    }
+    
+    if (!data.days) {
+        console.error('Days data is missing');
+        showError('Күндөр маалыматы жок');
+        return;
+    }
+    
+    if (!timeSlots || timeSlots.length === 0) {
+        console.error('Time slots are missing');
+        showError('Убакыт слоттору жок');
+        return;
+    }
+    
+    if (!scheduleData) {
+        console.error('Schedule data is missing');
+        scheduleData = {};
+    }
+    
+    // Debug маалыматын көрсөтүү
+    if (debugInfo) {
+        debugInfo.innerHTML = `
+            Debug:<br>
+            - Days: ${data.days ? Object.keys(data.days).length : 'жок'}<br>
+            - TimeSlots: ${data.time_slots ? data.time_slots.length : 'жок'}<br>
+            - ScheduleData: ${data.schedule_data ? Object.keys(data.schedule_data).length : 'жок'}<br>
+            - User Role: ${data.user_permissions ? data.user_permissions.role || 'аныкталган жок' : 'жок'}
+        `;
+    }
+    
+    const days = Object.keys(data.days);
+    
+    console.log('Days:', days); // Debug
+    console.log('TimeSlots:', timeSlots); // Debug
+    console.log('Available schedule data keys:', Object.keys(data.schedule_data || {})); // Debug
+    
+    let html = `
+        <div class="schedule-grid">
+            <div class="schedule-cell header-cell">⏰ Убакыт</div>
+    `;
+    
+    // Күндөрдү кошуу
+    days.forEach(dayKey => {
+        html += `<div class="schedule-cell header-cell">${data.days[dayKey]}</div>`;
+    });
+    
+    // Убакыт слоттору жана сабактар
+    timeSlots.forEach(timeSlot => {
+        html += `
+            <div class="schedule-cell time-cell">
+                <strong>${timeSlot.name}</strong><br>
+                <small>${timeSlot.start_time} - ${timeSlot.end_time}</small>
+            </div>
+        `;
+        
+        days.forEach(dayKey => {
+            const lesson = scheduleData[dayKey] && scheduleData[dayKey][timeSlot.id];
+            
+            if (lesson) {
+                html += `
+                    <div class="schedule-cell lesson-cell" onclick="handleLessonClick(${lesson.id})">
+                        ${userPermissions.can_edit ? `
+                            <button class="action-btn edit-btn" onclick="event.stopPropagation(); editLesson(${lesson.id})" title="Өзгөртүү">✏️</button>
+                            <button class="action-btn delete-btn" onclick="event.stopPropagation(); confirmDeleteLesson(${lesson.id})" title="Өчүрүү">🗑️</button>
+                        ` : ''}
+                        ${userPermissions.can_mark_attendance && lesson.can_mark_attendance ? `
+                            <button class="action-btn attendance-btn" onclick="event.stopPropagation(); openAttendanceModal(${lesson.id})" title="Жоктоо белгилөө">📋</button>
+                        ` : ''}
+                        <div class="lesson-title">${lesson.subject}</div>
+                        <div class="lesson-teacher">👨‍🏫 ${lesson.teacher}</div>
+                        <div class="lesson-room">📍 ${lesson.room}</div>
+                    </div>
+                `;
+            } else {
+                html += `
+                    <div class="schedule-cell empty-cell" onclick="handleEmptyClick('${timeSlot.id}', '${dayKey}')">
+                        ${userPermissions.can_edit ? `
+                            <button class="action-btn add-btn" onclick="event.stopPropagation(); addLesson('${timeSlot.id}', '${dayKey}')" title="Кошуу">➕</button>
+                        ` : ''}
+                        Эркин убакыт
+                    </div>
+                `;
+            }
+        });
+    });
+    
+    html += '</div>';
+    
+    if (scheduleContent) {
+        scheduleContent.innerHTML = html;
+        scheduleContent.classList.add('fade-in');
+    } else {
+        console.error('scheduleContent element not found when trying to set innerHTML');
+    }
+}
+
+// === САБАК КОШУУ ===
+function addLesson(timeSlotId, day) {
+    if (!userPermissions.can_edit) {
+        showError('Сизде сабак кошуу укугу жок');
+        return;
+    }
+    
+    currentLessonId = null;
+    document.getElementById('lessonModalTitle').textContent = '📚 Жаңы сабак кошуу';
+    document.getElementById('subjectSelect').value = '';
+    document.getElementById('teacherSelect').value = '';
+    document.getElementById('roomInput').value = '';
+    document.getElementById('deleteLessonBtn').style.display = 'none';
+    
+    // Модалда убакыт жана күн маалыматын сактоо
+    document.getElementById('lessonForm').setAttribute('data-time-slot', timeSlotId);
+    document.getElementById('lessonForm').setAttribute('data-day', day);
+    
+    document.getElementById('lessonModal').style.display = 'block';
+}
+
+// === САБАКТЫ ӨЗГӨРТҮҮ ===
+function editLesson(lessonId) {
+    if (!userPermissions.can_edit) {
+        showError('Сизде сабак өзгөртүү укугу жок');
+        return;
+    }
+    
+    // Lesson маалыматын табуу
+    let lesson = null;
+    Object.values(scheduleData).forEach(daySchedule => {
+        Object.values(daySchedule).forEach(timeSlotLesson => {
+            if (timeSlotLesson.id === lessonId) {
+                lesson = timeSlotLesson;
+            }
+        });
+    });
+    
+    if (!lesson) {
+        showError('Сабак табылган жок');
+        return;
+    }
+    
+    currentLessonId = lessonId;
+    document.getElementById('lessonModalTitle').textContent = '✏️ Сабакты өзгөртүү';
+    document.getElementById('subjectSelect').value = lesson.subject_id || '';
+    document.getElementById('teacherSelect').value = lesson.teacher_id || '';
+    document.getElementById('roomInput').value = lesson.room || '';
+    document.getElementById('deleteLessonBtn').style.display = 'inline-block';
+    
+    document.getElementById('lessonModal').style.display = 'block';
+}
+
+// === САБАКТЫ ӨЧҮРҮҮ ===
+function confirmDeleteLesson(lessonId) {
+    if (!userPermissions.can_edit) {
+        showError('Сизде сабак өчүрүү укугу жок');
+        return;
+    }
+    
+    if (confirm('Бул сабакты өчүрөсүзбү?')) {
+        deleteLesson(lessonId);
+    }
+}
+
+function deleteLesson(lessonId = null) {
+    const idToDelete = lessonId || currentLessonId;
+    
+    if (!idToDelete) {
+        showError('Өчүрүү үчүн сабак тандалган жок');
+        return;
+    }
+    
+    fetch('{% url "delete_schedule_lesson" %}', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': getCSRFToken()
+        },
+        body: JSON.stringify({
+            lesson_id: idToDelete
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showSuccess(data.message);
+            closeLessonModal();
+            loadScheduleForGroup(currentGroupId);
+        } else {
+            showError(data.error || 'Сабакты өчүрүүдө ката кетти');
+        }
+    })
+    .catch(error => {
+        console.error('Error deleting lesson:', error);
+        showError('Сабакты өчүрүүдө ката кетти');
+    });
+}
+
+// === КЕЛҮҮ-КЕТҮҮ МОДАЛЫН АЧУУ ===
+function openAttendanceModal(lessonId) {
+    if (!userPermissions.can_mark_attendance) {
+        showError('Сизде жоктоо белгилөө укугу жок');
+        return;
+    }
+    
+    currentLessonId = lessonId;
+    
+    fetch(`{% url 'get_lesson_students' %}?lesson_id=${lessonId}`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.students && data.lesson_info) {
+                displayLessonInfo(data.lesson_info);
+                displayStudentsList(data.students);
+                updateAttendanceSummary();
+                document.getElementById('attendanceModal').style.display = 'block';
+            } else {
+                showError(data.error || 'Студенттердин тизмеси жүктөлгөн жок');
+            }
+        })
+        .catch(error => {
+            console.error('Error loading students:', error);
+            showError('Студенттердин тизмесин жүктөөдө ката кетти');
+        });
+}
+
+// === САБАК МААЛЫМАТЫН КӨРСӨТҮҮ ===
+function displayLessonInfo(lessonInfo) {
+    const lessonInfoDiv = document.getElementById('lessonInfo');
+    lessonInfoDiv.innerHTML = `
+        <h3>📚 ${lessonInfo.subject}</h3>
+        <p><strong>👨‍🏫 Мугалим:</strong> ${lessonInfo.teacher}</p>
+        <p><strong>📍 Кабинет:</strong> ${lessonInfo.room}</p>
+        <p><strong>⏰ Убакыт:</strong> ${lessonInfo.time}</p>
+        <p><strong>📅 Күн:</strong> ${lessonInfo.day}</p>
+        <p><strong>👥 Группа:</strong> ${lessonInfo.group}</p>
+    `;
+}
+
+// === СТУДЕНТТЕРДИН ТИЗМЕСИН КӨРСӨТҮҮ ===
+function displayStudentsList(students) {
+    const studentsListDiv = document.getElementById('studentsList');
+    studentsListDiv.innerHTML = '';
+    
+    currentAttendanceData = {};
+    
+    students.forEach((student, index) => {
+        currentAttendanceData[student.id] = student.current_status || 'Present';
+        
+        const studentDiv = document.createElement('div');
+        studentDiv.className = 'student-item';
+        studentDiv.innerHTML = `
+            <div class="student-name">${index + 1}. ${student.name}</div>
+            <div class="attendance-buttons">
+                <button class="status-btn present ${student.current_status === 'Present' ? 'active' : ''}" 
+                        onclick="setAttendanceStatus(${student.id}, 'Present')">
+                    ✅ Келди
+                </button>
+                <button class="status-btn late ${student.current_status === 'Late' ? 'active' : ''}" 
+                        onclick="setAttendanceStatus(${student.id}, 'Late')">
+                    ⏰ Кечикти
+                </button>
+                <button class="status-btn absent ${student.current_status === 'Absent' ? 'active' : ''}" 
+                        onclick="setAttendanceStatus(${student.id}, 'Absent')">
+                    ❌ Жок
+                </button>
+            </div>
+        `;
+        studentsListDiv.appendChild(studentDiv);
+    });
+}
+
+// === КЕЛҮҮ-КЕТҮҮ СТАТУСУН КОЮУ ===
+function setAttendanceStatus(studentId, status) {
+    currentAttendanceData[studentId] = status;
+    
+    // Баскычтардын активдүү абалын жаңылоо
+    const studentItem = document.querySelector(`[onclick="setAttendanceStatus(${studentId}, 'Present')"]`).closest('.student-item');
+    const buttons = studentItem.querySelectorAll('.status-btn');
+    
+    buttons.forEach(btn => btn.classList.remove('active'));
+    studentItem.querySelector(`.status-btn.${status.toLowerCase()}`).classList.add('active');
+    
+    updateAttendanceSummary();
+}
+
+// === КЕЛҮҮ-КЕТҮҮ ЖЫЙЫНТЫГЫН ЖАҢЫЛОО ===
+function updateAttendanceSummary() {
+    let presentCount = 0, absentCount = 0, lateCount = 0;
+    
+    Object.values(currentAttendanceData).forEach(status => {
+        switch(status) {
+            case 'Present': presentCount++; break;
+            case 'Absent': absentCount++; break;
+            case 'Late': lateCount++; break;
+        }
+    });
+    
+    document.getElementById('presentCount').textContent = presentCount;
+    document.getElementById('absentCount').textContent = absentCount;
+    document.getElementById('lateCount').textContent = lateCount;
+}
+
+// === КЕЛҮҮ-КЕТҮҮНҮ САКТОО ===
+function saveAttendance() {
+    if (!currentLessonId || Object.keys(currentAttendanceData).length === 0) {
+        showError('Жоктоо маалыматы жок');
+        return;
+    }
+    
+    fetch('{% url "save_attendance" %}', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': getCSRFToken()
+        },
+        body: JSON.stringify({
+            lesson_id: currentLessonId,
+            attendance: currentAttendanceData,
+            date: new Date().toISOString().split('T')[0]
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showSuccess(data.message);
+            closeAttendanceModal();
+        } else {
+            showError(data.error || 'Жоктоону сактоодо ката кетти');
+        }
+    })
+    .catch(error => {
+        console.error('Error saving attendance:', error);
+        showError('Жоктоону сактоодо ката кетти');
+    });
+}
+
+// === МОДАЛДАРДЫ ЖАБУУ ===
+function closeLessonModal() {
+    document.getElementById('lessonModal').style.display = 'none';
+    currentLessonId = null;
+}
+
+function closeAttendanceModal() {
+    document.getElementById('attendanceModal').style.display = 'none';
+    currentLessonId = null;
+    currentAttendanceData = {};
+}
+
+// === САБАК ФОРМАСЫН ЖӨНӨТҮҮ ===
+document.getElementById('lessonForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    const subjectId = document.getElementById('subjectSelect').value;
+    const teacherId = document.getElementById('teacherSelect').value;
+    const room = document.getElementById('roomInput').value;
+    const timeSlotId = this.getAttribute('data-time-slot');
+    const day = this.getAttribute('data-day');
+    
+    if (!subjectId || !currentGroupId || !timeSlotId || !day) {
+        showError('Талапка сай бардык маалыматты толтуруңуз');
+        return;
+    }
+    
+    const requestData = {
+        subject_id: subjectId,
+        teacher_id: teacherId || null,
+        group_id: currentGroupId,
+        time_slot_id: timeSlotId,
+        day: day,
+        room: room
+    };
+    
+    if (currentLessonId) {
+        requestData.lesson_id = currentLessonId;
+    }
+    
+    fetch('{% url "save_schedule_lesson" %}', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': getCSRFToken()
+        },
+        body: JSON.stringify(requestData)
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showSuccess(data.message);
+            closeLessonModal();
+            loadScheduleForGroup(currentGroupId);
+        } else {
+            showError(data.error || 'Сабакты сактоодо ката кетти');
+        }
+    })
+    .catch(error => {
+        console.error('Error saving lesson:', error);
+        showError('Сабакты сактоодо ката кетти');
+    });
+});
+
+// === МОДАЛДАРДЫ ТЫШКАРЫ БАСКАНДА ЖАБУУ ===
+window.onclick = function(event) {
+    const lessonModal = document.getElementById('lessonModal');
+    const attendanceModal = document.getElementById('attendanceModal');
+    
+    if (event.target === lessonModal) {
+        closeLessonModal();
+    }
+    if (event.target === attendanceModal) {
+        closeAttendanceModal();
+    }
+};
+
+// === HELPER ФУНКЦИЯЛАР ===
+function getCSRFToken() {
+    return document.querySelector('[name=csrfmiddlewaretoken]')?.value || 
+           document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
+}
+
+function showSuccess(message) {
+    const alert = document.createElement('div');
+    alert.className = 'alert alert-success';
+    alert.textContent = message;
+    alert.style.position = 'fixed';
+    alert.style.top = '20px';
+    alert.style.right = '20px';
+    alert.style.zIndex = '2000';
+    alert.style.minWidth = '300px';
+    
+    document.body.appendChild(alert);
+    
+    setTimeout(() => {
+        if (document.body.contains(alert)) {
+            document.body.removeChild(alert);
+        }
+    }, 5000);
+}
+
+function showError(message) {
+    const alert = document.createElement('div');
+    alert.className = 'alert alert-error';
+    alert.textContent = message;
+    alert.style.position = 'fixed';
+    alert.style.top = '20px';
+    alert.style.right = '20px';
+    alert.style.zIndex = '2000';
+    alert.style.minWidth = '300px';
+    
+    document.body.appendChild(alert);
+    
+    setTimeout(() => {
+        if (document.body.contains(alert)) {
+            document.body.removeChild(alert);
+        }
+    }, 7000);
+}
+
+// === ЭМУЛЯЦИЯ ФУНКЦИЯЛАРЫ (DEVELOPMENT үчүн) ===
+function handleLessonClick(lessonId) {
+    // Сабакка басканда аткарылат (кошумча функциялар үчүн)
+    console.log('Lesson clicked:', lessonId);
+}
+
+function handleEmptyClick(timeSlotId, day) {
+    // Эркин убакытка басканда аткарылат
+    if (userPermissions.can_edit) {
+        addLesson(timeSlotId, day);
+    }
+}
+
+// === АВТОМАТТЫК ЖҮКТӨӨ (СТУДЕНТ/АТА-ЭНЕ ҮЧҮН) ===
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('Page loaded, user role:', '{{ user_role }}');
+    
+    // Эгер студент же ата-эне болсо, автоматтык түрдө schedule жүктөбүз
+    {% if user_role == 'STUDENT' and user_group %}
+        console.log('Auto-loading schedule for student group: {{ user_group.id }}');
+        loadScheduleForGroup({{ user_group.id }});
+    {% elif user_role == 'PARENT' %}
+        // Ата-энелер үчүн биринчи баланын группасын жүктөбүз
+        console.log('Parent detected, should load child schedules');
+    {% else %}
+        console.log('Admin/Manager/Teacher - manual selection required');
+    {% endif %}
+});
+</script>
+{% endblock %}

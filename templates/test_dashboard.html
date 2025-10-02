@@ -1,0 +1,11 @@
+{% extends 'base.html' %}
+{% block title %}Тест Dashboard{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h1>Тест Dashboard</h1>
+    <p>Колдонуучу: {{ user.username }}</p>
+    <p>Ролу: {{ role }}</p>
+    <p>Бүгүн: {{ today }}</p>
+</div>
+{% endblock %}

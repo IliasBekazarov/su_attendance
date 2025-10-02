@@ -1,0 +1,543 @@
+{% extends 'base.html' %}
+{% load i18n %}
+
+{% block title %}{% trans "Dashboard" %}{% endblock %}
+
+{% block extra_css %}
+<style>
+/* Profile photo effects on dashboard */
+.profile-photo-dashboard:hover {
+    transform: scale(1.05);
+    border-color: rgba(255,255,255,0.8) !important;
+    box-shadow: 0 0 20px rgba(255,255,255,0.3);
+}
+
+.profile-photo-placeholder-dashboard:hover {
+    background: rgba(255,255,255,0.3) !important;
+    transform: scale(1.05);
+    border-color: rgba(255,255,255,0.8) !important;
+    box-shadow: 0 0 20px rgba(255,255,255,0.3);
+}
+
+.profile-link:hover {
+    text-shadow: 0 0 10px rgba(255,255,255,0.5);
+}
+
+/* Pulse animation for incomplete profile */
+@keyframes pulse {
+    0% {
+        box-shadow: 0 0 0 0 rgba(255, 193, 7, 0.7);
+    }
+    70% {
+        box-shadow: 0 0 0 10px rgba(255, 193, 7, 0);
+    }
+    100% {
+        box-shadow: 0 0 0 0 rgba(255, 193, 7, 0);
+    }
+}
+
+.badge.bg-warning {
+    animation: pulse 2s infinite;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <!-- Колдонуучу маалыматтары -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card bg-primary text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div class="d-flex align-items-center">
+                            <!-- Профил сүрөтү -->
+                            <div class="me-3">
+                                <a href="{% url 'profile_view' %}" class="text-decoration-none">
+                                    {% if user.userprofile.profile_photo %}
+                                        <img src="{{ user.userprofile.profile_photo.url }}" 
+                                             alt="Profile Photo" 
+                                             class="rounded-circle profile-photo-dashboard"
+                                             style="width: 70px; height: 70px; object-fit: cover; border: 3px solid rgba(255,255,255,0.3); transition: all 0.3s ease;">
+                                    {% else %}
+                                        <div class="profile-photo-placeholder-dashboard d-flex align-items-center justify-content-center rounded-circle"
+                                             style="width: 70px; height: 70px; background: rgba(255,255,255,0.2); border: 3px solid rgba(255,255,255,0.3); color: white; font-size: 1.5rem; transition: all 0.3s ease;">
+                                            <i class="fas fa-user"></i>
+                                        </div>
+                                    {% endif %}
+                                </a>
+                            </div>
+                            
+                            <!-- Колдонуучу маалыматтары -->
+                            <div>
+                                <h2 class="mb-1">
+                                    <a href="{% url 'profile_view' %}" class="text-white text-decoration-none">
+                                        {{ user.get_full_name|default:user.username }}
+                                    </a>
+                                </h2>
+                                <p class="mb-0">
+                                    {% if role == 'ADMIN' %}
+                                        <i class="fas fa-crown me-2"></i>{% trans "System Administrator" %}
+                                    {% elif role == 'MANAGER' %}
+                                        <i class="fas fa-clipboard-list me-2"></i>{% trans "Manager" %}
+                                    {% elif role == 'TEACHER' %}
+                                        <i class="fas fa-chalkboard-teacher me-2"></i>{% trans "Teacher" %}
+                                        {% if teacher_obj %}
+                                            - {{ teacher_obj.name }}
+                                        {% endif %}
+                                    {% elif role == 'STUDENT' %}
+                                        <i class="fas fa-user-graduate me-2"></i>{% trans "Student" %}
+                                        {% if student_obj %}
+                                            - {{ student_obj.name }} ({{ student_obj.group.name }})
+                                        {% endif %}
+                                    {% elif role == 'PARENT' %}
+                                        <i class="fas fa-heart me-2"></i>{% trans "Parent" %}
+                                    {% endif %}
+                                </p>
+                                <!-- Профилди өзгөртүү шилтемеси -->
+                                <small class="text-white-50">
+                                    <a href="{% url 'profile_edit' %}" class="text-white-50 text-decoration-none">
+                                        <i class="fas fa-edit me-1"></i>{% trans "Edit Profile" %}
+                                    </a>
+                                </small>
+                            </div>
+                        </div>
+                        <div class="text-end">
+                            <div class="badge bg-light text-dark fs-6 mb-2">
+                                <i class="fas fa-calendar-alt me-1"></i>
+                                {{ today|date:"d F Y" }}
+                            </div>
+                            <!-- Профил толуктугу -->
+                            {% if user.userprofile.is_profile_complete %}
+                                <div class="badge bg-success fs-6">
+                                    <i class="fas fa-check-circle me-1"></i>{% trans "Profile Complete" %}
+                                </div>
+                            {% else %}
+                                <div class="badge bg-warning text-dark fs-6">
+                                    <i class="fas fa-exclamation-circle me-1"></i>{% trans "Complete Your Profile" %}
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- АДМИН/МЕНЕДЖЕР ПАНЕЛИ -->
+    {% if role == 'ADMIN' or role == 'MANAGER' %}
+    <div class="row g-4 mb-4">
+        <!-- Статистика карточкалары -->
+        <div class="col-md-3">
+            <div class="card shadow-sm border-0">
+                <div class="card-body text-center">
+                    <div class="mb-3">
+                        <i class="fas fa-users fa-2x text-primary"></i>
+                    </div>
+                    <h3 class="mb-1">{{ total_students }}</h3>
+                    <p class="text-muted mb-0">{% trans "Students" %}</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card shadow-sm border-0">
+                <div class="card-body text-center">
+                    <div class="mb-3">
+                        <i class="fas fa-chalkboard-teacher fa-2x text-success"></i>
+                    </div>
+                    <h3 class="mb-1">{{ total_teachers }}</h3>
+                    <p class="text-muted mb-0">{% trans "Teachers" %}</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card shadow-sm border-0">
+                <div class="card-body text-center">
+                    <div class="mb-3">
+                        <i class="fas fa-layer-group fa-2x text-info"></i>
+                    </div>
+                    <h3 class="mb-1">{{ total_groups }}</h3>
+                    <p class="text-muted mb-0">{% trans "Groups" %}</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card shadow-sm border-0">
+                <div class="card-body text-center">
+                    <div class="mb-3">
+                        <i class="fas fa-book-open fa-2x text-warning"></i>
+                    </div>
+                    <h3 class="mb-1">{{ total_subjects }}</h3>
+                    <p class="text-muted mb-0">{% trans "Subjects" %}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Тез иш-аракеттер -->
+    <div class="row g-4 mb-4">
+        <div class="col-md-6">
+            <div class="card h-100">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0"><i class="fas fa-cogs me-2"></i>{% trans "Quick Actions" %}</h5>
+                </div>
+                <div class="card-body">
+                    <div class="d-grid gap-2">
+                        <a href="{% url 'universal_schedule' %}" class="btn btn-primary">
+                            <i class="fas fa-calendar-week me-2"></i>{% trans "View Schedule" %}
+                        </a>
+                        <a href="{% url 'report' %}" class="btn btn-outline-success">
+                            <i class="fas fa-chart-bar me-2"></i>{% trans "View Reports" %}
+                        </a>
+                        <a href="{% url 'manage_schedule' %}" class="btn btn-outline-info">
+                            <i class="fas fa-cogs me-2"></i>{% trans "Manage Schedule" %}
+                        </a>
+                        <a href="{% url 'manage_subjects' %}" class="btn btn-outline-warning">
+                            <i class="fas fa-book-open me-2"></i>{% trans "Manage Subjects" %}
+                        </a>
+                        {% if role == 'ADMIN' %}
+                        <a href="/admin/" class="btn btn-outline-danger" target="_blank">
+                            <i class="fas fa-tools me-2"></i>{% trans "Admin Panel" %}
+                        </a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-6">
+            <div class="card h-100">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0"><i class="fas fa-bell me-2"></i>{% trans "Recent Activities" %}</h5>
+                </div>
+                <div class="card-body">
+                    {% if recent_activities %}
+                        <div class="list-group list-group-flush">
+                            {% for activity in recent_activities %}
+                            <div class="list-group-item border-0 px-0 py-2">
+                                <div class="d-flex justify-content-between align-items-start">
+                                    <div class="ms-2 me-auto">
+                                        <div class="fw-bold">{{ activity.title }}</div>
+                                        <small class="text-muted">{{ activity.description }}</small>
+                                    </div>
+                                    <span class="badge bg-primary rounded-pill">
+                                        {{ activity.timestamp|date:"H:i" }}
+                                    </span>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <p class="text-muted">{% trans "No recent activities" %}</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- МУГАЛИМ ПАНЕЛИ -->
+    {% if role == 'TEACHER' %}
+    <div class="row g-4 mb-4">
+        <div class="col-md-4">
+            <div class="card border-0 bg-gradient" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+                <div class="card-body text-white text-center">
+                    <i class="fas fa-calendar-check fa-3x mb-3"></i>
+                    <h4>{% trans "Today's Classes" %}</h4>
+                    <h2 class="mb-0">{{ today_classes_count|default:0 }}</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card border-0 bg-gradient" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);">
+                <div class="card-body text-white text-center">
+                    <i class="fas fa-users fa-3x mb-3"></i>
+                    <h4>{% trans "Students" %}</h4>
+                    <h2 class="mb-0">{{ my_students_count|default:0 }}</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card border-0 bg-gradient" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);">
+                <div class="card-body text-white text-center">
+                    <i class="fas fa-book fa-3x mb-3"></i>
+                    <h4>{% trans "Subjects" %}</h4>
+                    <h2 class="mb-0">{{ my_subjects_count|default:0 }}</h2>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Мугалимдин тез функциялары -->
+    <div class="row g-4 mb-4">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0"><i class="fas fa-clock me-2"></i>{% trans "Today's Schedule" %}</h5>
+                </div>
+                <div class="card-body">
+                    {% if today_schedule %}
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>{% trans "Time" %}</th>
+                                        <th>{% trans "Subject" %}</th>
+                                        <th>{% trans "Group" %}</th>
+                                        <th>{% trans "Action" %}</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for schedule in today_schedule %}
+                                    <tr>
+                                        <td>
+                                            <strong>{{ schedule.start_time|time:"H:i" }} - {{ schedule.end_time|time:"H:i" }}</strong>
+                                        </td>
+                                        <td>{{ schedule.subject.name }}</td>
+                                        <td>
+                                            <span class="badge bg-primary">{{ schedule.group.name }}</span>
+                                        </td>
+                                        <td>
+                                            <a href="{% url 'mark_group_attendance' schedule.group.id %}" class="btn btn-sm btn-success">
+                                                <i class="fas fa-check me-1"></i>{% trans "Mark Attendance" %}
+                                            </a>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <div class="text-center text-muted py-4">
+                            <i class="fas fa-calendar-times fa-3x mb-3"></i>
+                            <p>{% trans "No classes today" %}</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header bg-warning text-dark">
+                    <h5 class="mb-0"><i class="fas fa-tools me-2"></i>{% trans "Quick Actions" %}</h5>
+                </div>
+                <div class="card-body">
+                    <div class="d-grid gap-2">
+                        <a href="{% url 'universal_schedule' %}" class="btn btn-primary">
+                            <i class="fas fa-calendar-week me-2"></i>{% trans "View Schedule" %}
+                        </a>
+                        <a href="{% url 'teacher_attendance' %}" class="btn btn-success">
+                            <i class="fas fa-check-square me-2"></i>{% trans "Mark Attendance" %}
+                        </a>
+                        <a href="{% url 'report' %}" class="btn btn-outline-success">
+                            <i class="fas fa-chart-line me-2"></i>{% trans "Reports" %}
+                        </a>
+                        <a href="/leave/manage/" class="btn btn-outline-warning">
+                            <i class="fas fa-file-alt me-2"></i>{% trans "View Requests" %}
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- СТУДЕНТ ПАНЕЛИ -->
+    {% if role == 'STUDENT' %}
+    <div class="row g-4 mb-4">
+        <div class="col-md-4">
+            <div class="card border-0" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+                <div class="card-body text-white text-center">
+                    <i class="fas fa-percentage fa-3x mb-3"></i>
+                    <h4>{% trans "Attendance Rate" %}</h4>
+                    <h2 class="mb-0">{{ attendance_percentage|default:0 }}%</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card border-0" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);">
+                <div class="card-body text-white text-center">
+                    <i class="fas fa-calendar-check fa-3x mb-3"></i>
+                    <h4>{% trans "Days Present" %}</h4>
+                    <h2 class="mb-0">{{ present_days|default:0 }}</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card border-0" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);">
+                <div class="card-body text-white text-center">
+                    <i class="fas fa-times-circle fa-3x mb-3"></i>
+                    <h4>{% trans "Days Absent" %}</h4>
+                    <h2 class="mb-0">{{ absent_days|default:0 }}</h2>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-4 mb-4">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0"><i class="fas fa-calendar-alt me-2"></i>{% trans "Today's Schedule" %}</h5>
+                </div>
+                <div class="card-body">
+                    {% if student_today_schedule %}
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>{% trans "Time" %}</th>
+                                        <th>{% trans "Subject" %}</th>
+                                        <th>{% trans "Teacher" %}</th>
+                                        <th>{% trans "Status" %}</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for schedule in student_today_schedule %}
+                                    <tr>
+                                        <td>{{ schedule.start_time|time:"H:i" }} - {{ schedule.end_time|time:"H:i" }}</td>
+                                        <td>{{ schedule.subject.name }}</td>
+                                        <td>{{ schedule.subject.teacher.name }}</td>
+                                        <td>
+                                            {% if schedule.attendance_status %}
+                                                {% if schedule.attendance_status == 'Present' %}
+                                                    <span class="badge bg-success">{% trans "Present" %}</span>
+                                                {% elif schedule.attendance_status == 'Absent' %}
+                                                    <span class="badge bg-danger">{% trans "Absent" %}</span>
+                                                {% elif schedule.attendance_status == 'Excused' %}
+                                                    <span class="badge bg-warning">{% trans "Excused" %}</span>
+                                                {% endif %}
+                                            {% else %}
+                                                <span class="badge bg-secondary">{% trans "Not Marked" %}</span>
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <div class="text-center text-muted py-4">
+                            <i class="fas fa-calendar-times fa-3x mb-3"></i>
+                            <p>{% trans "No classes today" %}</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0"><i class="fas fa-tools me-2"></i>{% trans "Quick Actions" %}</h5>
+                </div>
+                <div class="card-body">
+                    <div class="d-grid gap-2">
+                        <a href="{% url 'student_schedule' %}" class="btn btn-primary">
+                            <i class="fas fa-calendar-week me-2"></i>{% trans "My Schedule" %}
+                        </a>
+                        <a href="{% url 'submit_leave_request' %}" class="btn btn-warning">
+                            <i class="fas fa-file-alt me-2"></i>{% trans "Submit Request" %}
+                        </a>
+                        <a href="{% url 'my_leave_requests' %}" class="btn btn-info">
+                            <i class="fas fa-list me-2"></i>{% trans "My Requests" %}
+                        </a>
+                        <a href="{% url 'notifications' %}" class="btn btn-secondary">
+                            <i class="fas fa-bell me-2"></i>{% trans "Notifications" %}
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- АТА-ЭНЕ ПАНЕЛИ -->
+    {% if role == 'PARENT' %}
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0"><i class="fas fa-child me-2"></i>Балдарым</h5>
+                </div>
+                <div class="card-body">
+                    {% if my_children %}
+                        <div class="row g-3">
+                            {% for child in my_children %}
+                            <div class="col-md-6">
+                                <div class="card border-primary">
+                                    <div class="card-header bg-primary text-white">
+                                        <h6 class="mb-0">{{ child.name }} - {{ child.group.name }}</h6>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="row text-center">
+                                            <div class="col-4">
+                                                <h5 class="text-success">{{ child.present_count|default:0 }}</h5>
+                                                <small class="text-muted">Келген</small>
+                                            </div>
+                                            <div class="col-4">
+                                                <h5 class="text-danger">{{ child.absent_count|default:0 }}</h5>
+                                                <small class="text-muted">Келбеген</small>
+                                            </div>
+                                            <div class="col-4">
+                                                <h5 class="text-primary">{{ child.attendance_percentage|default:0 }}%</h5>
+                                                <small class="text-muted">Пайыз</small>
+                                            </div>
+                                        </div>
+                                        <div class="mt-3">
+                                            <a href="{% url 'universal_schedule' %}" class="btn btn-sm btn-primary me-2">
+                                                <i class="fas fa-calendar-week me-1"></i>Расписание
+                                            </a>
+                                            <a href="/leave/request/{{ child.id }}/" class="btn btn-sm btn-outline-warning">
+                                                <i class="fas fa-file-alt me-1"></i>Арыз берүү
+                                            </a>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <p class="text-muted">Бала маалыматтары жок</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Ата-энелер үчүн билдирүүлөр -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header bg-warning text-dark">
+                    <h5 class="mb-0"><i class="fas fa-bell me-2"></i>Билдирүүлөр</h5>
+                </div>
+                <div class="card-body">
+                    {% if parent_notifications %}
+                        <div class="list-group">
+                            {% for notification in parent_notifications %}
+                            <div class="list-group-item {% if not notification.is_read %}list-group-item-warning{% endif %}">
+                                <div class="d-flex justify-content-between align-items-start">
+                                    <div>
+                                        <h6 class="mb-1">{{ notification.title }}</h6>
+                                        <p class="mb-1">{{ notification.message }}</p>
+                                        <small class="text-muted">{{ notification.created_at|date:"d F Y H:i" }}</small>
+                                    </div>
+                                    {% if not notification.is_read %}
+                                        <span class="badge bg-warning">Жаңы</span>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <p class="text-muted">Билдирүүлөр жок</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

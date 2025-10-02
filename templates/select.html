@@ -1,0 +1,30 @@
+{% extends 'base.html' %}
+{% block content %}
+<h2>Курс жана Күн Тандоо</h2>
+<form method="post">
+    {% csrf_token %}
+    <div class="row">
+        <div class="col-md-4">
+            <label>Курс:</label>
+            <select name="course" class="form-select">
+                <option value="1">1st Year</option>
+                <option value="2">2nd Year</option>
+                <option value="3">3rd Year</option>
+            </select>
+        </div>
+        <div class="col-md-4">
+            <label>Күн:</label>
+            <select name="weekday" class="form-select">
+                <option value="Mon">Дүйшөмбү</option>
+                <option value="Tue">Шейшемби</option>
+                <option value="Wed">Шаршемби</option>
+                <option value="Thu">Бейшемби</option>
+                <option value="Fri">Жума</option>
+            </select>
+        </div>
+        <div class="col-md-4">
+            <button type="submit" class="btn btn-primary mt-4">Тандоо</button>
+        </div>
+    </div>
+</form>
+{% endblock %}

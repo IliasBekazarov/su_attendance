@@ -1,0 +1,306 @@
+{% extends 'base.html' %}
+{% load django_bootstrap5 %}
+{% load schedule_filters %}
+
+{% block title %}Жумалык Расписание{% endblock %}
+
+{% block content %}
+<div class="container-fluid mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2><i class="fas fa-calendar-week me-2"></i>Жумалык Расписание</h2>
+        <div class="d-flex gap-2">
+            {% if user_role == 'STUDENT' %}
+                <span class="badge bg-info fs-6">
+                    <i class="fas fa-user-graduate me-1"></i>Студент көрүнүшү
+                </span>
+            {% elif user_role == 'TEACHER' %}
+                <span class="badge bg-success fs-6">
+                    <i class="fas fa-chalkboard-teacher me-1"></i>Мугалим көрүнүшү
+                </span>
+            {% else %}
+                <span class="badge bg-primary fs-6">
+                    <i class="fas fa-users-cog me-1"></i>Башкаруучу көрүнүшү
+                </span>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Филтр панели (Админ/Менеджер үчүн) -->
+    {% if user_role in 'ADMIN,MANAGER' %}
+    <div class="card mb-4">
+        <div class="card-header">
+            <h5><i class="fas fa-filter me-2"></i>Филтр</h5>
+        </div>
+        <div class="card-body">
+            <form method="get" class="row g-3">
+                <div class="col-md-4">
+                    <label for="course" class="form-label">Курс</label>
+                    <select class="form-select" id="course" name="course">
+                        <option value="">Бардык курстар</option>
+                        {% for course in courses %}
+                        <option value="{{ course.id }}" 
+                                {% if course_filter == course.id|stringformat:"s" %}selected{% endif %}>
+                            {{ course.name }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <label for="group" class="form-label">Группа</label>
+                    <select class="form-select" id="group" name="group">
+                        <option value="">Бардык группалар</option>
+                        {% for group in groups %}
+                        <option value="{{ group.id }}" 
+                                {% if group_filter == group.id|stringformat:"s" %}selected{% endif %}>
+                            {{ group.name }} ({{ group.course.name }})
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <label for="teacher" class="form-label">Мугалим</label>
+                    <select class="form-select" id="teacher" name="teacher">
+                        <option value="">Бардык мугалимдер</option>
+                        {% for teacher in teachers %}
+                        <option value="{{ teacher.id }}" 
+                                {% if teacher_filter == teacher.id|stringformat:"s" %}selected{% endif %}>
+                            {{ teacher.name }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-12">
+                    <button type="submit" class="btn btn-primary me-2">
+                        <i class="fas fa-search me-1"></i>Филтер колдонуу
+                    </button>
+                    {% if course_filter or group_filter or teacher_filter %}
+                    <a href="{% url 'weekly_schedule' %}" class="btn btn-outline-secondary">
+                        <i class="fas fa-times me-1"></i>Тазалоо
+                    </a>
+                    {% endif %}
+                </div>
+            </form>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Жумалык расписание таблицасы -->
+    <div class="card">
+        <div class="card-header">
+            <h5><i class="fas fa-table me-2"></i>Жумалык Расписание Таблицасы</h5>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-bordered table-hover mb-0 weekly-schedule-table">
+                    <thead class="table-dark">
+                        <tr>
+                            <th width="15%" class="text-center">Убакыт / Пара</th>
+                            {% for day_code, day_name in days %}
+                            <th width="{% widthratio 85 days|length 1 %}%" class="text-center">
+                                <i class="fas fa-calendar-day me-1"></i>{{ day_name }}
+                            </th>
+                            {% endfor %}
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for start_time, end_time, period_name in time_slots %}
+                        <tr>
+                            <td class="time-slot text-center bg-light">
+                                <div class="fw-bold text-primary">{{ period_name }}</div>
+                                <small class="text-muted">{{ start_time }} - {{ end_time }}</small>
+                            </td>
+                            {% for day_code, day_name in days %}
+                            <td class="schedule-cell">
+                                {% with day_schedule=schedule_matrix|get_item:day_code %}
+                                    {% if day_schedule %}
+                                        {% with period_data=day_schedule|get_item:period_name %}
+                                            {% if period_data.schedules %}
+                                                {% for schedule in period_data.schedules %}
+                                                <div class="schedule-item mb-2 p-2 border-start border-3 border-primary">
+                                                    <div class="subject-name fw-bold text-primary">
+                                                        <i class="fas fa-book me-1"></i>{{ schedule.subject.subject_name }}
+                                                    </div>
+                                                    <div class="teacher-name text-success small">
+                                                        <i class="fas fa-user-tie me-1"></i>{{ schedule.subject.teacher.name }}
+                                                    </div>
+                                                    <div class="group-name text-info small">
+                                                        <i class="fas fa-users me-1"></i>{{ schedule.group.name }}
+                                                    </div>
+                                                    <div class="time-info text-muted small">
+                                                        <i class="fas fa-clock me-1"></i>{{ schedule.start_time|time:"H:i" }} - {{ schedule.end_time|time:"H:i" }}
+                                                    </div>
+                                                </div>
+                                                {% endfor %}
+                                            {% else %}
+                                                <div class="no-class text-center text-muted py-3">
+                                                    <i class="fas fa-calendar-times fa-2x mb-2"></i>
+                                                    <div>Сабак жок</div>
+                                                </div>
+                                            {% endif %}
+                                        {% endwith %}
+                                    {% else %}
+                                        <div class="no-class text-center text-muted py-3">
+                                            <i class="fas fa-calendar-times fa-2x mb-2"></i>
+                                            <div>Сабак жок</div>
+                                        </div>
+                                    {% endif %}
+                                {% endwith %}
+                            </td>
+                            {% endfor %}
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Статистика карталары -->
+    <div class="row mt-4">
+        <div class="col-md-3">
+            <div class="card bg-primary text-white">
+                <div class="card-body text-center">
+                    <h3>{{ days|length }}</h3>
+                    <p class="mb-0"><i class="fas fa-calendar me-1"></i>Иш күндөрү</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-success text-white">
+                <div class="card-body text-center">
+                    <h3>{{ time_slots|length }}</h3>
+                    <p class="mb-0"><i class="fas fa-clock me-1"></i>Күндүк паралар</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-info text-white">
+                <div class="card-body text-center">
+                    {% with total_schedules=0 %}
+                        {% for day_code, day_name in days %}
+                            {% for start_time, end_time, period_name in time_slots %}
+                                {% with day_schedule=schedule_matrix|default:day_code %}
+                                    {% if day_schedule %}
+                                        {% with period_data=day_schedule|default:period_name %}
+                                            {% if period_data.schedules %}
+                                                {% with total_schedules=total_schedules|add:period_data.schedules|length %}{% endwith %}
+                                            {% endif %}
+                                        {% endwith %}
+                                    {% endif %}
+                                {% endwith %}
+                            {% endfor %}
+                        {% endfor %}
+                        <h3>{{ total_schedules }}</h3>
+                    {% endwith %}
+                    <p class="mb-0"><i class="fas fa-book me-1"></i>Жалпы сабактар</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-warning text-white">
+                <div class="card-body text-center">
+                    <h3>{{ schedule_matrix|length }}</h3>
+                    <p class="mb-0"><i class="fas fa-calendar-week me-1"></i>Активдүү күндөр</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.weekly-schedule-table {
+    font-size: 0.9em;
+}
+
+.schedule-cell {
+    vertical-align: top;
+    padding: 8px;
+    min-height: 120px;
+    max-height: 200px;
+    overflow-y: auto;
+}
+
+.schedule-item {
+    background: rgba(13, 110, 253, 0.05);
+    border-radius: 4px;
+}
+
+.time-slot {
+    position: sticky;
+    left: 0;
+    z-index: 10;
+    font-weight: bold;
+}
+
+.no-class {
+    opacity: 0.6;
+}
+
+@media (max-width: 768px) {
+    .weekly-schedule-table {
+        font-size: 0.8em;
+    }
+    
+    .schedule-cell {
+        min-height: 80px;
+        max-height: 120px;
+        padding: 4px;
+    }
+    
+    .schedule-item {
+        margin-bottom: 5px !important;
+        padding: 5px !important;
+    }
+}
+
+/* Scroll үчүн стилдер */
+.schedule-cell::-webkit-scrollbar {
+    width: 4px;
+}
+
+.schedule-cell::-webkit-scrollbar-track {
+    background: #f1f1f1;
+}
+
+.schedule-cell::-webkit-scrollbar-thumb {
+    background: #c1c1c1;
+    border-radius: 2px;
+}
+
+.schedule-cell::-webkit-scrollbar-thumb:hover {
+    background: #a8a8a8;
+}
+</style>
+
+<script>
+// Автоматтык филтр
+document.addEventListener('DOMContentLoaded', function() {
+    const courseSelect = document.getElementById('course');
+    const groupSelect = document.getElementById('group');
+    const teacherSelect = document.getElementById('teacher');
+    
+    if (courseSelect) {
+        courseSelect.addEventListener('change', function() {
+            // Группаларды курс боюнча филтерлөө
+            const courseId = this.value;
+            if (groupSelect) {
+                const groups = groupSelect.querySelectorAll('option');
+                groups.forEach(option => {
+                    if (option.value === '' || option.textContent.includes('(')) {
+                        option.style.display = 'block';
+                    } else {
+                        option.style.display = 'none';
+                    }
+                });
+            }
+        });
+    }
+});
+
+// Реалтайм сабак маалыматын жаңыртуу (эгер керек болсо)
+setInterval(function() {
+    // 5 мүнөт сайын автоматтык жаңыртуу
+    // location.reload();
+}, 300000);
+</script>
+{% endblock %}

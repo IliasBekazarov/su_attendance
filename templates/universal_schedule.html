@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+
+{% block title %}Универсалдуу Расписание{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h1>Универсалдуу Расписание</h1>
+    <p>Салымбеков Университети</p>
+    
+    {% if schedules %}
+        <div class="row">
+            {% for schedule in schedules %}
+                <div class="col-md-6 mb-3">
+                    <div class="card">
+                        <div class="card-body">
+                            <h5 class="card-title">{{ schedule.subject.name }}</h5>
+                            <p class="card-text">
+                                <strong>Мугалим:</strong> {{ schedule.teacher.get_full_name }}<br>
+                                <strong>Топ:</strong> {{ schedule.group.name }}<br>
+                                <strong>Күн:</strong> {{ schedule.day_of_week }}<br>
+                                <strong>Убактысы:</strong> {{ schedule.start_time|time:"H:i" }} - {{ schedule.end_time|time:"H:i" }}<br>
+                                <strong>Аудитория:</strong> {{ schedule.room }}
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="alert alert-info">
+            <h4>Расписание табылган жок</h4>
+            <p>Азыркы учурда расписание маалыматы жок.</p>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

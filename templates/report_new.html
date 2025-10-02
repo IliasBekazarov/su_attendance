@@ -1,0 +1,313 @@
+{% extends 'base.html' %}
+{% load django_bootstrap5 %}
+{% load i18n %}
+{% block title %}{% trans "Detailed Report" %}{% endblock %}
+{% block content %}
+<div class="container mt-5">
+    <h2 class="mb-4">📊 {% trans "Attendance System - Detailed Report" %}</h2>
+    
+    <!-- Фильтры -->
+    <div class="card mb-4">
+        <div class="card-header bg-primary text-white">
+            <h5 class="mb-0">🔍 {% trans "Filter and Settings" %}</h5>
+        </div>
+        <div class="card-body">
+            <form method="GET" class="row g-3">
+                <div class="col-md-3">
+                    <label class="form-label">{% trans "Report type:" %}</label>
+                    <select name="report_type" class="form-select">
+                        <option value="all" {% if report_type == 'all' %}selected{% endif %}>{% trans "All" %}</option>
+                        <option value="daily" {% if report_type == 'daily' %}selected{% endif %}>{% trans "Today" %}</option>
+                        <option value="weekly" {% if report_type == 'weekly' %}selected{% endif %}>{% trans "Weekly" %}</option>
+                        <option value="monthly" {% if report_type == 'monthly' %}selected{% endif %}>{% trans "Monthly" %}</option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">{% trans "Start date:" %}</label>
+                    <input type="date" name="start_date" class="form-control" value="{{ start_date|date:'Y-m-d' }}">
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">{% trans "End date:" %}</label>
+                    <input type="date" name="end_date" class="form-control" value="{{ end_date|date:'Y-m-d' }}">
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">{% trans "Student:" %}</label>
+                    <select name="student" class="form-select">
+                        <option value="">{% trans "All students" %}</option>
+                        {% for student in students %}
+                        <option value="{{ student.id }}" {% if student_id == student.id|stringformat:"s" %}selected{% endif %}>
+                            {{ student.name }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">{% trans "Action:" %}</label>
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-primary">🔍 {% trans "Filter" %}</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <!-- Статистика -->
+    <div class="row mb-4">
+        <div class="col-md-2">
+            <div class="card bg-primary text-white">
+                <div class="card-body text-center">
+                    <h4>{{ total_records }}</h4>
+                    <small>{% trans "Total records" %}</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-2">
+            <div class="card bg-success text-white">
+                <div class="card-body text-center">
+                    <h4>{{ present_count }}</h4>
+                    <small>Катышкан</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-2">
+            <div class="card bg-danger text-white">
+                <div class="card-body text-center">
+                    <h4>{{ absent_count }}</h4>
+                    <small>Катышкан жок</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-2">
+            <div class="card bg-warning text-dark">
+                <div class="card-body text-center">
+                    <h4>{{ late_count }}</h4>
+                    <small>Кечикти</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-2">
+            <div class="card bg-info text-white">
+                <div class="card-body text-center">
+                    <h4>{{ excused_count }}</h4>
+                    <small>Уруксат менен</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-2">
+            <div class="card bg-secondary text-white">
+                <div class="card-body text-center">
+                    <h4>{{ attendance_percentage }}%</h4>
+                    <small>Катышуу пайызы</small>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- График жана экспорт -->
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header">
+                    <h6 class="mb-0">📈 Соңку жумада катышуу тренди</h6>
+                </div>
+                <div class="card-body">
+                    <canvas id="attendanceChart" height="100"></canvas>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header">
+                    <h6 class="mb-0">💾 Экспорт</h6>
+                </div>
+                <div class="card-body">
+                    <form method="POST">
+                        {% csrf_token %}
+                        <div class="mb-3">
+                            <select name="format" class="form-select">
+                                <option value="pdf">📄 PDF</option>
+                                <option value="excel">📊 Excel</option>
+                            </select>
+                        </div>
+                        <button type="submit" class="btn btn-success w-100">⬇️ Жүктөп алуу</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Группалар боюнча статистика -->
+    {% if group_stats %}
+    <div class="card mb-4">
+        <div class="card-header">
+            <h6 class="mb-0">👥 Группалар боюнча катышуу</h6>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-sm">
+                    <thead>
+                        <tr>
+                            <th>Группа</th>
+                            <th>Жалпы жазуулар</th>
+                            <th>Катышкандар</th>
+                            <th>Пайыз</th>
+                            <th>Прогресс</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for stat in group_stats %}
+                        <tr>
+                            <td><strong>{{ stat.group.name }}</strong></td>
+                            <td>{{ stat.total }}</td>
+                            <td>{{ stat.present }}</td>
+                            <td>{{ stat.percentage }}%</td>
+                            <td>
+                                <div class="progress" style="height: 20px;">
+                                    <div class="progress-bar {% if stat.percentage >= 80 %}bg-success{% elif stat.percentage >= 60 %}bg-warning{% else %}bg-danger{% endif %}" 
+                                         style="width: {{ stat.percentage }}%">
+                                        {{ stat.percentage }}%
+                                    </div>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+    
+    <!-- Эң көп жок болгон студенттер -->
+    {% if top_absent_students %}
+    <div class="card mb-4">
+        <div class="card-header bg-warning">
+            <h6 class="mb-0">⚠️ Көп жок болгон студенттер (TOP 10)</h6>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                {% for student in top_absent_students %}
+                <div class="col-md-6 mb-2">
+                    <div class="d-flex justify-content-between align-items-center border-bottom pb-1">
+                        <span>{{ student.name }}</span>
+                        <span class="badge bg-danger">{{ student.absent_count }} жок</span>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+    {% endif %}
+    
+    <!-- Детальная таблица -->
+    <div class="card">
+        <div class="card-header">
+            <h6 class="mb-0">📋 Детальная таблица (соңку 100 жазуу)</h6>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover table-striped">
+                    <thead class="table-primary">
+                        <tr>
+                            <th>Студент</th>
+                            <th>Группа</th>
+                            <th>Сабак</th>
+                            <th>Статус</th>
+                            <th>Дата</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for att in attendances %}
+                        <tr>
+                            <td>{{ att.student.name }}</td>
+                            <td>
+                                {% if att.student.group %}
+                                    <span class="badge bg-secondary">{{ att.student.group.name }}</span>
+                                {% else %}
+                                    <span class="text-muted">Н/Д</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ att.subject.subject_name|default:"Н/Д" }}</td>
+                            <td>
+                                <span class="badge {% if att.status == 'Present' %}bg-success{% elif att.status == 'Absent' %}bg-danger{% elif att.status == 'Late' %}bg-warning text-dark{% else %}bg-info{% endif %}">
+                                    {% if att.status == 'Present' %}✅ Катышты
+                                    {% elif att.status == 'Absent' %}❌ Катышкан жок
+                                    {% elif att.status == 'Late' %}⏰ Кечикти
+                                    {% else %}✉️ Уруксат менен жок{% endif %}
+                                </span>
+                            </td>
+                            <td>{{ att.date }}</td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="5" class="text-center text-muted">📋 Маалыматтар жок</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Chart.js for trends -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const ctx = document.getElementById('attendanceChart').getContext('2d');
+    const dailyTrend = {{ daily_trend|safe }};
+    
+    new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: dailyTrend.map(item => item.date),
+            datasets: [{
+                label: 'Катышуу пайызы',
+                data: dailyTrend.map(item => item.percentage),
+                borderColor: 'rgb(75, 192, 192)',
+                backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                tension: 0.1,
+                fill: true
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                title: {
+                    display: true,
+                    text: 'Катышуу тренди (соңку 7 күн)'
+                },
+                legend: {
+                    display: false
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    max: 100,
+                    ticks: {
+                        callback: function(value) {
+                            return value + '%';
+                        }
+                    }
+                }
+            }
+        }
+    });
+});
+</script>
+
+<style>
+.card {
+    border: none;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+.progress {
+    background-color: #e9ecef;
+}
+.table th {
+    border-top: none;
+    font-weight: 600;
+}
+</style>
+{% endblock %}

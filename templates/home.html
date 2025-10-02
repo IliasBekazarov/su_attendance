@@ -1,0 +1,10 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="container text-center mt-5">
+    <h1 class="display-4">Сабакка катышууну көзөмөлдөө системасына кош келиңиз!</h1>
+    <p class="lead">Сураныч, улантуу үчүн кириңиз же катталыңыз.</p>
+    <hr class="my-4">
+    <a href="{% url 'login' %}" class="btn btn-primary btn-lg">Кирүү</a>
+    <a href="{% url 'register' %}" class="btn btn-secondary btn-lg">Катталуу</a>
+</div>
+{% endblock %}

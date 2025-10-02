@@ -1,0 +1,16 @@
+{% extends 'base.html' %}
+{% load django_bootstrap5 %}
+{% load i18n %}
+{% block title %}{% trans "Registration" %}{% endblock %}
+{% block content %}
+<div class="container d-flex justify-content-center align-items-center min-vh-100">
+    <div class="card p-4 shadow-sm" style="max-width: 500px; width: 100%;">
+        <h2 class="text-center mb-4">{% trans "Registration" %}</h2>
+        <form method="POST">
+            {% csrf_token %}
+            {% bootstrap_form form %}
+            {% bootstrap_button _("Register") button_type="submit" button_class="btn-primary w-100" %}
+        </form>
+    </div>
+</div>
+{% endblock %}

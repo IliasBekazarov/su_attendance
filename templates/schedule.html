@@ -1,0 +1,145 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load i18n %}
+
+{% block title %}{% trans "Schedule" %}{% endblock %}
+
+{% block content %}
+<div class="timetable-container">
+    <h2 class="timetable-title">{% trans "Schedule" %}</h2>
+    <div class="course-selector">
+        {% for course in courses %}
+        <button class="course-btn {% if course.id == active_course.id %}active-course-btn{% endif %}" 
+                onclick="showCourseTable({{ course.id }})">
+            {{ course.name }}
+        </button>
+        {% endfor %}
+    </div>
+
+    {% for course in courses %}
+    <div id="course-{{ course.id }}" class="course-table" style="display: {% if course.id == active_course.id %}block{% else %}none{% endif %}">
+        <h3>{{ course.name }}</h3>
+        <div class="table-responsive">
+            <table class="timetable">
+                <thead>
+                    <tr>
+                        <th>{% trans "Period" %}</th>
+                        <th>{% trans "Time" %}</th>
+                        {% for group in course.group_set.all %}
+                        <th>{{ group.name }}</th>
+                        {% endfor %}
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for period in periods %}
+                    <tr>
+                        <td>{{ period.period }}</td>
+                        <td>{{ period.start_time|time:"H:i" }} - {{ period.end_time|time:"H:i" }}</td>
+                        {% for group in course.group_set.all %}
+                        <td class="{% if schedules|select_schedule:group.id|select_period:period.period %}clickable-cell{% endif %}"
+                            onclick="{% if schedules|select_schedule:group.id|select_period:period.period %}openModal({{ period.period }}, {{ group.id }}){% endif %}">
+                            {% with schedule=schedules|select_schedule:group.id|select_period:period.period %}
+                            {% if schedule %}
+                            {{ schedule.subject.subject_name }}<br>
+                            {{ schedule.subject.teacher.name }}<br>
+                            {{ schedule.room|default:"Кабинет жок" }}
+                            {% endif %}
+                            {% endwith %}
+                        </td>
+                        {% endfor %}
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    {% endfor %}
+
+    <!-- Расписание түзүү/түзөтүү формасы -->
+    <div class="card mt-4">
+        <div class="card-body">
+            <h3>Расписание түзүү/түзөтүү</h3>
+            <form method="POST">
+                {% csrf_token %}
+                {{ form.as_p }}
+                <button type="submit" class="btn btn-primary submit-btn">Сактоо</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Модалдык терезе -->
+    <div class="modal fade" id="attendanceModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title"></h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <ul class="student-list" id="student-list"></ul>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-primary submit-btn" onclick="submitAttendance()">Сактоо</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function showCourseTable(courseId) {
+    document.querySelectorAll('.course-table').forEach(table => table.style.display = 'none');
+    document.getElementById(`course-${courseId}`).style.display = 'block';
+    document.querySelectorAll('.course-btn').forEach(btn => btn.classList.remove('active-course-btn'));
+    document.querySelector(`[onclick="showCourseTable(${courseId})"]`).classList.add('active-course-btn');
+}
+
+function openModal(period, groupId) {
+    fetch(`/schedule/mark/${groupId}/${period}/`)
+        .then(response => response.json())
+        .then(data => {
+            const modal = new bootstrap.Modal(document.getElementById('attendanceModal'));
+            document.querySelector('.modal-title').textContent = `Студенттер тизмеси (Пара ${period}, ${data.group_name})`;
+            const studentList = document.getElementById('student-list');
+            studentList.innerHTML = data.students.map((student, index) => `
+                <li class="student-item">
+                    <label>
+                        <input type="checkbox" name="status_${student.id}" value="Present" ${student.attendance ? 'checked' : ''}>
+                        ${student.name}
+                    </label>
+                    <select class="for-late" name="late_${student.id}">
+                        <option value="">Статус</option>
+                        <option value="Late">Кечикти</option>
+                        <option value="Absent">Келген жок</option>
+                    </select>
+                </li>
+            `).join('');
+            modal.show();
+        });
+}
+
+function submitAttendance() {
+    const modal = document.getElementById('attendanceModal');
+    const formData = new FormData();
+    document.querySelectorAll('#student-list input[type="checkbox"]').forEach(input => {
+        formData.append(input.name, input.checked ? 'Present' : '');
+    });
+    document.querySelectorAll('#student-list select').forEach(select => {
+        if (select.value) formData.append(select.name, select.value);
+    });
+    
+    fetch('/schedule/mark/submit/', {
+        method: 'POST',
+        body: formData,
+        headers: { 'X-CSRFToken': '{{ csrf_token }}' }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            bootstrap.Modal.getInstance(modal).hide();
+            alert('Катышуу сакталды!');
+        }
+    });
+}
+</script>
+{% endblock %}

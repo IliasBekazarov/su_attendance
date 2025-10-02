@@ -1,0 +1,195 @@
+{% load static %}
+{% load i18n %}
+<!DOCTYPE html>
+<html lang="{% get_current_language as LANGUAGE_CODE %}{{ LANGUAGE_CODE }}">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>
+        {% block title %}
+            {% get_current_language as LANGUAGE_CODE %}
+            {% if LANGUAGE_CODE == 'ky' %}{{ UNIVERSITY_INFO.name_ky }}
+            {% elif LANGUAGE_CODE == 'ru' %}{{ UNIVERSITY_INFO.name_ru }}
+            {% else %}{{ UNIVERSITY_INFO.name_en }}{% endif %}
+        {% endblock %}
+    </title>
+    <!-- CSRF token for AJAX requests -->
+    <meta name="csrf-token" content="{{ csrf_token }}" />
+    <!-- Bootstrap CSS -->
+    <link rel="icon" type="image/x-icon" href="{% static 'favicon.ico' %}" />
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+    <link rel="stylesheet" href="{% static 'css/style.css' %}" />
+    <!-- Font Awesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary fixed-top" style="width: 100%;">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="{% url 'home' %}">
+                <i class="fas fa-school"></i> 
+                {% get_current_language as LANGUAGE_CODE %}
+                {% if LANGUAGE_CODE == 'ky' %}{{ UNIVERSITY_INFO.name_ky }}
+                {% elif LANGUAGE_CODE == 'ru' %}{{ UNIVERSITY_INFO.name_ru }}  
+                {% else %}{{ UNIVERSITY_INFO.name_en }}{% endif %}
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                    {% if user.is_authenticated %}
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'dashboard' %}"><i class="fas fa-tachometer-alt"></i> {% trans "Dashboard" %}</a>
+                    </li>
+                    {% if user.userprofile.role == 'STUDENT' %}
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'student_schedule' %}"><i class="fas fa-calendar-week"></i> {% trans "My Schedule" %}</a>
+                    </li>
+                    {% else %}
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'unified_schedule' %}"><i class="fas fa-calendar-week"></i> {% trans "Schedule" %}</a>
+                    </li>
+                    {% endif %}
+                    {% if user.userprofile.role == 'STUDENT' %}
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="leaveDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="fas fa-file-medical"></i> {% trans "Leave Requests" %}
+                        </a>
+                        <ul class="dropdown-menu" aria-labelledby="leaveDropdown">
+                            <li><a class="dropdown-item" href="{% url 'submit_leave_request' %}">
+                                <i class="fas fa-plus"></i> {% trans "New Request" %}
+                            </a></li>
+                            <li><a class="dropdown-item" href="{% url 'my_leave_requests' %}">
+                                <i class="fas fa-list"></i> {% trans "My Requests" %}
+                            </a></li>
+                        </ul>
+                    </li>
+                    {% endif %}
+                    {% if user.userprofile.role == 'TEACHER' %}
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'teacher_attendance' %}"><i class="fas fa-check-square"></i> {% trans "Attendance" %}</a>
+                    </li>
+                    {% endif %}
+                    {% if user.userprofile.role in 'ADMIN,MANAGER,TEACHER' %}
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'manage_leave_requests' %}"><i class="fas fa-clipboard-list"></i> {% trans "Manage Leave Requests" %}</a>
+                    </li>
+                    {% endif %}
+                    {% if user.userprofile.role in 'ADMIN,MANAGER' %}
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'report' %}"><i class="fas fa-chart-bar"></i> {% trans "Reports" %}</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'manage_schedule' %}"><i class="fas fa-cogs"></i> {% trans "Manage Schedule" %}</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'manage_subjects' %}"><i class="fas fa-book-open"></i> {% trans "Manage Subjects" %}</a>
+                    </li>
+                    {% endif %}
+                    {% if user.userprofile.role == 'ADMIN' %}
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'admin:index' %}"><i class="fas fa-user-shield"></i> {% trans "Admin Panel" %}</a>
+                    </li>
+                    {% endif %}
+                    {% else %}
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'login' %}"><i class="fas fa-sign-in-alt"></i> {% trans "Login" %}</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'register' %}"><i class="fas fa-user-plus"></i> {% trans "Register" %}</a>
+                    </li>
+                    {% endif %}
+                </ul>
+                {% if user.is_authenticated %}
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="fas fa-user"></i> {{ user.username }}
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
+                            <li><a class="dropdown-item" href="{% url 'profile_view' %}">
+                                <i class="fas fa-user-circle"></i> {% trans "My Profile" %}
+                            </a></li>
+                            <li><a class="dropdown-item" href="{% url 'notifications' %}">
+                                <i class="fas fa-bell"></i> {% trans "Notifications" %}
+                                {% comment %}{% if unread_notifications_count %}
+                                    <span class="badge bg-danger ms-1">{{ unread_notifications_count }}</span>
+                                {% endif %}{% endcomment %}
+                            </a></li>
+                            <li><a class="dropdown-item" href="{% url 'settings' %}">
+                                <i class="fas fa-cogs"></i> {% trans "Settings" %}
+                            </a></li>
+                            {% if user.userprofile.role == 'STUDENT' %}
+                            {% endif %}
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item" href="{% url 'logout' %}"><i class="fas fa-sign-out-alt"></i> {% trans "Logout" %}</a></li>
+                        </ul>
+                    </li>
+                </ul>
+                {% endif %}
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="container mt-5 pt-5" style="min-height: 68vh    ;">
+        {% if messages %}
+        {% for message in messages %}
+        <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+        {% endfor %}
+        {% endif %}
+        {% block content %}
+        {% endblock %}
+    </div>
+
+    <!-- Footer -->
+    <footer class="bg-dark text-light text-center py-4 mt-5" style="width: 100%;">
+        <div class="container">
+            <p>
+                {% get_current_language as LANGUAGE_CODE %}
+                {% if LANGUAGE_CODE == 'ky' %}{{ FOOTER_CONFIG.copyright_text }}
+                {% elif LANGUAGE_CODE == 'ru' %}{{ FOOTER_CONFIG.copyright_text_ru }}
+                {% else %}{{ FOOTER_CONFIG.copyright_text_en }}{% endif %}
+            </p>
+            {% if FOOTER_CONFIG.show_social_links and SOCIAL_MEDIA %}
+            <p>
+                {% if SOCIAL_MEDIA.facebook %}<a href="{{ SOCIAL_MEDIA.facebook }}" class="text-light me-3" target="_blank"><i class="fab fa-facebook-f"></i></a>{% endif %}
+                {% if SOCIAL_MEDIA.instagram %}<a href="{{ SOCIAL_MEDIA.instagram }}" class="text-light me-3" target="_blank"><i class="fab fa-instagram"></i></a>{% endif %}
+                {% if SOCIAL_MEDIA.linkedin %}<a href="{{ SOCIAL_MEDIA.linkedin }}" class="text-light me-3" target="_blank"><i class="fab fa-linkedin"></i></a>{% endif %}
+                {% if SOCIAL_MEDIA.youtube %}<a href="{{ SOCIAL_MEDIA.youtube }}" class="text-light me-3" target="_blank"><i class="fab fa-youtube"></i></a>{% endif %}
+                {% if SOCIAL_MEDIA.telegram %}<a href="{{ SOCIAL_MEDIA.telegram }}" class="text-light" target="_blank"><i class="fab fa-telegram"></i></a>{% endif %}
+            </p>
+            {% endif %}
+            {% if FOOTER_CONFIG.show_contact_info and UNIVERSITY_INFO %}
+            <small class="text-muted">
+                {{ UNIVERSITY_INFO.address }} | {{ UNIVERSITY_INFO.phone }} | {{ UNIVERSITY_INFO.email }}
+            </small>
+            {% endif %}
+        </div>0
+    </footer>
+
+    <!-- Bootstrap JS -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Theme Toggle JS -->
+    <script src="{% static 'js/theme-toggle.js' %}"></script>
+    {% block extra_js %}{% endblock %}
+    <script>
+        // Add smooth scroll behavior
+        document.querySelectorAll('a.nav-link').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                const href = this.getAttribute('href');
+                if (href.startsWith('#') && document.querySelector(href)) {
+                    e.preventDefault();
+                    document.querySelector(href).scrollIntoView({ behavior: 'smooth' });
+                }
+            });
+        });
+    </script>
+</body>
+</html>
