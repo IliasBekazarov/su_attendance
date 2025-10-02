@@ -142,3 +142,6 @@ curl -H "Authorization: Token YOUR_TOKEN_HERE" \
 **Проект Типи**: Django Веб Приложениеси  
 **Версия**: 1.0.0  
 **Лицензия**: MIT
+Бул экинчи өзгөртүү
+# su_attendance.origin
+# su_attendance.origin
